@@ -1,5 +1,521 @@
-template-repository (1.0-1) unstable; urgency=medium
+numba (0.57.1+dfsg-1) unstable; urgency=medium
 
-  * Initial release
+  * New upstream release
+  * Refresh patches
+  * Update no-git-in-generate_lower_listing.patch for changed version key
+  * Configure intersphinx where available.
+    - Add python-doc as a build dependency
+    - Add ignore-unavailable-intersphinx.patch to point at local
+      object.inv files
+  * Add python3-setuptools to d/tests/control for a test dependency
+  * Remove a bunch of backported patches needed for Python 3.11 compatibility
+  * Refresh patches
+  * Skip 3 tests that fail on autopkgtests. They should be investigated though
 
- -- Tsic404 <liuheng@deepin.org>  Sat, 28 Jan 2023 13:46:49 +0800
+ -- Diane Trout <diane@ghic.org>  Tue, 30 May 2023 20:18:14 -0700
+
+numba (0.56.4+dfsg-3) unstable; urgency=medium
+
+  * Add armel-libatomic.patch for __sync_fetch_and_add_4 symbol
+    (Closes: #994294)
+    - Thanks to Michael Crusoe for the suggestion.
+  * add use-local-intersphinx.patch to network access during doc build
+
+ -- Diane Trout <diane@ghic.org>  Tue, 14 Feb 2023 09:24:19 -0800
+
+numba (0.56.4+dfsg-2) unstable; urgency=medium
+
+  [ Diane Trout ]
+  * Backport patches from https://github.com/numba/numba/pull/8590 into
+    patches/python3.11/
+    0054-Apply-suggestions-from-code-review.patch
+    0055-Fix-arrayexprs-for-py3.11.patch
+    0056-Fix-LOAD_GLOBAL-arg-use-in-test_parfors-for-py3.11.patch
+    0057-Move-_fix_LOAD_GLOBAL-arg-to-bytecode-module-and-use-it-in-_compute_used_globals.patch
+    0058-Fix-text_flow_control-for-py3.11.patch
+    0059-Not-a-py311-change-stop-printing-source-code.patch
+    0060-Attempt-to-fix-cellvars.patch
+    0061-Fix-CodeType-usage.patch
+    0062-Remove-duplicated-handling-of-CodeType.patch
+    0063-Flake8-fixes.patch
+    0064-More-flake8-fixes.patch
+    0065-Enable-list_to_tuple-peephole-for-py3.11.patch
+    0067-Update-numba-core-byteflow.py.patch
+    0068-Get-rid-of-custom-copy_code_type.-Use-CodeType.Replace-instead.patch
+  * Add Origin header for the 8545 pull request for the earlier patches
+  * Backport patches from https://github.com/numba/numba/pull/8639
+      201-Update-string-bytes-hash-algs-to-siphash13-for-Python.patch
+      202-Fix-flake8.patch
+      203-Attempt-to-fix-closures.patch
+      204-Enable-more-peephole-rewrites-in-3.11.patch
+      205-Fix-test_dump_bytecode.patch
+      206-Fix-f-string-const-name-interp.patch
+      207-Rewrite-_jump_if_none-to-match-pre-py3.11.patch
+      208-Fix-near-and-far-jump-target-ordering.patch
+      209-Add-more-new-op-code-handling.patch
+      210-Fix-issue-with-EXTENDED_ARG-test-and-update-test.patch
+      211-Add-pop-NULL-to-CALL_FUNCTION_EX-byteflow-analysis.patch
+      212-Fix-out-of-bounds-loop-index-in-test.patch
+      213-Accommodate-multiple-bytecodes-at-block-start-with-no.patch
+      214-Fix-parfors-prange-test-generator-LOAD_GLOBAL-args.patch
+      215-Update-assertion-for-Python-3.11-style-error-messages.patch
+      216-Fix-bytecode-iteration-to-handle-EXTENDED_ARG-as-jump.patch
+      217-Fix-rebase-error-in-op_LOAD_DEREF.patch
+      218-Respond-to-feedback-RE-use-of-_is_null_temp_reg-in.patch
+      219-Fix-binop-names-to-be-legal-variable-names.patch
+      220-Update-test_extended_arg-to-use-CodeType.replace.patch
+  * Backport pull request https://github.com/numba/numba/pull/8644
+      301-Fix-bare-reraise-support.patch
+  * Try to implement nocheck test skipping
+  * Mark known problmatic tests with expectedFailure("python3.11")
+    tests-failing-python3.patch
+
+ -- Diane Trout <diane@ghic.org>  Sun, 05 Feb 2023 20:51:25 -0800
+
+numba (0.56.4+dfsg-1) unstable; urgency=medium
+
+  * Warning! The upstream patches added to support Python 3.11 are
+    incomplete at present and there are test failures with Numba
+    running with Python 3.11.
+  * New upstream release
+  * Increment Build-Depends as 0.56.4 supports up to numpy 1.24
+    (Closes: #1026286)
+  * Backport https://github.com/numba/numba/pull/8545 to support
+    Python 3.11 (Closes: #1024031)
+  * Add lintian override about np/ufunc/_num_threads library as it is
+    not linked to libc in Python 3.11 either.
+  * Bump Standards-Version to 4.6.1. No changes needed.
+  * Use numbas runtests.py instead of pytest for running build time tests.
+    - upstreams test runner is parallelized.
+    - also I limited the test runner to choose a random 20% of the tests
+      as builds frequently exceeded builder runtime limits.
+    - add pybuild.testfiles to copy runtests driver into build directory.
+  * Remove pytest packages from Build-Dependencies since they're unused now.
+  * Override litian error for very-long-line in numba/tests/test_nrt.py
+    The long line is the symbolic representation of what the test
+    generated assembly code should be.
+  * Add numpy-1-24-pr8691.patch with some small modifications to build with
+    the Python 3.11 patches and adjust the maximum numpy version.
+    (Closes: #1026286)
+    This allows increasing numpy build depends to << 1.25
+
+ -- Diane Trout <diane@ghic.org>  Sat, 07 Jan 2023 21:21:26 -0800
+
+numba (0.56.2+dfsg-3) unstable; urgency=medium
+
+  * Skip long running tests during build.
+    Will Hopefully allow builds to finish on slower architectures.
+  * Disable onetbb as Debian's version is too new for Numba
+  * Limit autopkgtest threading to no more than 16 on PPC.
+  * add-test-tags to skip tests some tests, especially ones that
+    require finding the pyc files
+  * Skip some gdb test cases if numba optimization isn't set to 0
+  * more closely match upstreams test environment for autopkgtests
+
+ -- Diane Trout <diane@ghic.org>  Thu, 06 Oct 2022 09:07:55 -0700
+
+numba (0.56.2+dfsg-2) unstable; urgency=medium
+
+  * Update llvmlite build-dependency (Closes: #1019945)
+  * Add use-python3-test-nonsense-gdb-binary.patch (Closes: #1019949)
+  * add reorder-setuptools-import.patch to build with setuptools 65
+
+ -- Diane Trout <diane@ghic.org>  Sun, 18 Sep 2022 16:00:37 -0700
+
+numba (0.56.2+dfsg-1) unstable; urgency=medium
+
+  * New upstream release (Closes: #1018786)
+  * Refresh patches
+  * Ignore lintian error about _num_threads extentsion not using C
+    symbols.
+
+ -- Diane Trout <diane@ghic.org>  Wed, 07 Sep 2022 13:06:48 -0700
+
+numba (0.55.2+dfsg-1) unstable; urgency=medium
+
+  * New upstream release
+  * Refresh patches
+  * Adjust Files-Excluded. Upstream switched to github actions.
+  * Adjust package version to indicate that the source is repackaged.
+  * Add myself to debian/copyright.
+
+ -- Diane Trout <diane@ghic.org>  Wed, 29 Jun 2022 19:47:30 -0700
+
+numba (0.55.1-1) unstable; urgency=medium
+
+  [ Andreas Tille ]
+  * Team upload.
+  * New upstream version
+  * Standards-Version: 4.6.0 (routine-update)
+  * Point Vcs fields to salsa.debian.org (routine-update)
+  * Add salsa-ci file (routine-update)
+  * Rules-Requires-Root: no (routine-update)
+  * No tab in license text (routine-update)
+  * Use secure URI in Homepage field.
+  * Set upstream metadata fields: Bug-Database, Bug-Submit, Repository,
+    Repository-Browse.
+  * watch file standard 4 (routine-update)
+
+  [ Diane Trout ]
+  * Refresh patches for 0.55.0
+  * Update libtbb-dev Build-Depends to be >= 2021.4.0
+  * Mark build-depends python3-numpy (<< 1:1.22). numba 0.55.1 is not
+    compatible with numpy 1.22
+
+ -- Diane Trout <diane@ghic.org>  Mon, 17 Jan 2022 18:27:05 -0800
+
+numba (0.52.0-5) unstable; urgency=medium
+
+  * Add support-sphinx-v4.0.1.patch (Closes: #997085)
+    Thanks to Boyuan Yang for the pointer to the patch
+
+ -- Diane Trout <diane@ghic.org>  Wed, 27 Oct 2021 20:58:56 -0700
+
+numba (0.52.0-4) unstable; urgency=medium
+
+  * Skip test_user_set_cpu_name on armhf as it seems to depend on number
+    of tests run.
+
+ -- Diane Trout <diane@ghic.org>  Sun, 31 Jan 2021 10:51:54 -0800
+
+numba (0.52.0-3) unstable; urgency=medium
+
+  * Add skip-unicode-buserror-armhf.patch
+    Avoid triggering Bus Errors when armhf binaries are run on CPUs
+    that don't support unaligned memory access
+
+ -- Diane Trout <diane@ghic.org>  Sat, 30 Jan 2021 09:36:48 -0800
+
+numba (0.52.0-2) unstable; urgency=medium
+
+  * Fix typo in Vcs-Git url
+  * Add skip-armhf-tests-on-arm64.patch to deal with autopkgtest failures
+  * Remove armhf conditional from debian/tests/python3-numba as numba does
+    not using an environment variable to skip tests
+
+ -- Diane Trout <diane@ghic.org>  Thu, 21 Jan 2021 15:31:48 -0800
+
+numba (0.52.0-1) unstable; urgency=medium
+
+  * New upstream release.
+  * Backport Python 3.9 compatibility patch from
+    https://github.com/numba/numba/pull/6579 (Closes: #972246)
+    - Switch to running default python3 instead of hard-coding
+      python3.8 in rules and autopkg-tests
+  * Update python3-llvmlite dependency to >= 0.35~
+  * remove skip_failing_tests.patch, they seem to work now.
+  * Refresh patches
+  * Adopt numba (Closes: #935626)
+    - Remove Mo Zhou from uploaders, add myself
+
+ -- Diane Trout <diane@ghic.org>  Mon, 11 Jan 2021 21:57:52 -0800
+
+numba (0.51.2-6) unstable; urgency=medium
+
+  * Team upload.
+  * debian/tests Depends: gcc | c-compiler
+    Needed for dpkg-architecture to work without error.
+
+ -- Drew Parsons <dparsons@debian.org>  Sun, 29 Nov 2020 08:37:39 +0800
+
+numba (0.51.2-5) unstable; urgency=medium
+
+  * Team upload.
+  * debian/tests: skip test_immutability_in_array_dispatch on armhf
+  * python3-numba Depends: python3-scipy (>= 1.0)
+
+ -- Drew Parsons <dparsons@debian.org>  Sat, 28 Nov 2020 16:55:34 +0800
+
+numba (0.51.2-4) unstable; urgency=medium
+
+  * Team upload.
+  * debian patch 32bit_skip_64bit_hashing_tests.patch skips via
+    unittest module not pytest
+
+ -- Drew Parsons <dparsons@debian.org>  Fri, 27 Nov 2020 11:46:37 +0800
+
+numba (0.51.2-3) unstable; urgency=medium
+
+  * Team upload.
+  * debian patch 32bit_skip_64bit_hashing_tests.patch skips
+    test_heterogeneous_tuples and test_homogeneous_tuples from
+    test_hashing.TestTupleHashing on 32-bit systems (armhf, i386)
+    since these tests require 64-bit integers.
+  * Standards-Version: 4.5.1
+
+ -- Drew Parsons <dparsons@debian.org>  Wed, 25 Nov 2020 19:25:10 +0800
+
+numba (0.51.2-2) unstable; urgency=medium
+
+  * Team upload.
+  * remove Py3defver from debian/rules (the variable is not used)
+  * build against python3.8 only. Numba is not yet ready for python3.9.
+    See Bug#972246.
+
+ -- Drew Parsons <dparsons@debian.org>  Wed, 25 Nov 2020 16:48:47 +0800
+
+numba (0.51.2-1) unstable; urgency=medium
+
+  * New upstream version 0.51.2
+  * Bump llvmlite dependency to (>= 0.34~, << 0.35) (Closes: #970694,#971148)
+
+ -- Mo Zhou <lumin@debian.org>  Thu, 01 Oct 2020 12:39:34 +0800
+
+numba (0.50.1-2) unstable; urgency=medium
+
+  * Team upload.
+  * upload new upstream release to unstable
+
+ -- Drew Parsons <dparsons@debian.org>  Sun, 28 Jun 2020 21:38:04 +0800
+
+numba (0.50.1-1exp2) experimental; urgency=medium
+
+  * Team upload.
+  * python3-numba Recommends: python3-pip, also Depends in debian/tests
+    (pip used to detect installed modules in numba/misc/numba_sysinfo.py)
+
+ -- Drew Parsons <dparsons@debian.org>  Sun, 28 Jun 2020 11:12:23 +0800
+
+numba (0.50.1-1exp1) experimental; urgency=medium
+
+  * Team upload.
+  * New upstream release.
+    - works with numpy 1.18. Closes: #962176.
+    - examples and tutorials no longer provided in numba-doc
+    - Build-Depends: python3-llvmlite (>=0.33~)
+  * use MPLBACKEND=Agg to stop display of images during tests
+    (e.g. Mandelbrot image in doc_examples)
+  * add debian patch skip_failing_tests.patch to skip failing test
+    test_ediff1d_edge_cases in test_np_functions.py
+    (see https://github.com/numba/numba/issues/5929)
+
+ -- Drew Parsons <dparsons@debian.org>  Sat, 27 Jun 2020 16:29:37 +0800
+
+numba (0.49.1-1exp1) experimental; urgency=medium
+
+  * Team upload.
+  * New upstream release.
+    - drop debian patch sphinx-rtd-theme.patch
+      (sphinx-rtd-theme now used upstream)
+    - no longer uses six. Closes: #869537.
+  * Standards-Version: 4.5.0
+  * debhelper compatibility level 13
+    Build-Depends: debhelper-compat (= 13)
+  * update versioned dependencies: python3-colorama (>= 0.3.9~),
+    python3-llvmlite (>=0.31~), python3-llvmlite (<< 0.33),
+    python3-numpy (>= 1.10~). Closes: #926864.
+
+ -- Drew Parsons <dparsons@debian.org>  Fri, 29 May 2020 02:23:57 +0800
+
+numba (0.48.0-5) unstable; urgency=medium
+
+  * Team upload.
+  * debian patch llvm_long_name_PR4373.patch applies upstream PR4373
+    to fix LLVM handling of long names.
+  * Build-Depends: dh-sequence-sphinxdoc
+    (provided by sphinx = python3-sphinx)
+
+ -- Drew Parsons <dparsons@debian.org>  Sat, 30 May 2020 00:59:14 +0800
+
+numba (0.48.0-4) unstable; urgency=medium
+
+  * Team upload.
+  * Build-Depends: sphinx rather than python3-sphinx, name
+    sphinx-build directly as sphinx binary. Closes: #961741.
+
+ -- Drew Parsons <dparsons@debian.org>  Fri, 29 May 2020 01:12:29 +0800
+
+numba (0.48.0-3) unstable; urgency=medium
+
+  * Team upload.
+  * run build-time tests for arch builds only
+  * parallelize build-time tests with python3-pytest-xdist
+
+ -- Drew Parsons <dparsons@debian.org>  Thu, 28 May 2020 18:54:58 +0800
+
+numba (0.48.0-2) unstable; urgency=medium
+
+  * Team upload.
+  * drop Recommends: python-numba from numba-doc, remove python-numba
+    tests from debian/tests. Closes: #943135.
+  * run debian/tests over all supported python versions
+
+ -- Drew Parsons <dparsons@debian.org>  Thu, 28 May 2020 12:01:21 +0800
+
+numba (0.48.0-1) unstable; urgency=medium
+
+  * New upstream version 0.48.0
+  * gbp: don't require gpg signature
+  * Patch the doc build to prevent it from calling git.
+  * Build-Depends on python3-numpydoc.
+  * Update my mail address in control and copyright.
+
+ -- Mo Zhou <lumin@debian.org>  Thu, 13 Feb 2020 19:09:45 +0800
+
+numba (0.42.0-1) unstable; urgency=medium
+
+  * New upstream version 0.42.0
+  * Build-Depends and Depends on llvmlite >= 0.27.0~
+  * Delete unused postinst/postrm scripts for Python2 packages.
+  * Bump Standards-Version to 4.3.0 (no change).
+
+ -- Mo Zhou <cdluminate@gmail.com>  Mon, 07 Jan 2019 05:42:14 +0000
+
+numba (0.40.1-1) unstable; urgency=medium
+
+  [Daniel Stender]
+  * Team upload.
+  * deb/control:
+    + drop myself from Uploaders.
+    + bump standards to 4.2.1 (no changes needed).
+
+  [ Mo Zhou ]
+  * New upstream version 0.40.1
+  * build-deps on libtbb-dev.
+  * Completely drop Python2 support.
+
+ -- Daniel Stender <stender@debian.org>  Thu, 20 Dec 2018 17:07:49 +0100
+
+numba (0.39.0-1) unstable; urgency=medium
+
+  * New upstream version 0.39.0
+  * Bump the minimum python-llvmlite B-D requirement to 0.24.0~ .
+  * Deprecate X-Python*-Version field.
+  * Bump Standards-Version to 4.2.0 (no change).
+  * Make documentation build target independent to python3 version.
+
+ -- Mo Zhou <cdluminate@gmail.com>  Thu, 09 Aug 2018 08:18:08 +0000
+
+numba (0.37.0-1) unstable; urgency=medium
+
+  * New upstream release.
+  * Update patches
+    + debian/patches/sphinx-rtd-theme.patch
+    + no-git-in-generate_lower_listing.patch
+  * rules: Build doc with python3 version of sphinx.
+    + Use python3 version of sphinx-rtd-theme
+  * Update llvmlite version requirement.
+  * Add B-D python3-setuptools
+
+ -- Mo Zhou <cdluminate@gmail.com>  Fri, 23 Mar 2018 01:44:42 +0000
+
+numba (0.34.0-3) unstable; urgency=medium
+
+  * deb/control:
+    + bump standards version to 4.1.3 (no further changes needed).
+    + update Vcs fields (moved to salsa).
+    + add funcsigs and singledispatch to runtime deps of py2 binary.
+    + add archs to Suggests of nvidia-cuda-toolkit.
+  * deb/copyright:
+    + expand copyright span.
+    + replace full license text of CC0-1.0 with short text and pointer
+      to /usr/share/common-licenses.
+  * deb/gbp.conf:
+    + drop import-orig section header.
+    + change debian branch to debian/master.
+    + add sign-tags set to True.
+
+ -- Daniel Stender <stender@debian.org>  Tue, 20 Feb 2018 14:22:25 +0100
+
+numba (0.34.0-2) unstable; urgency=medium
+
+  * Upload to unstable.
+  * deb/rules:
+    + add switch to recognize nodoc from DEB_BUILD_OPTIONS.
+    + run dh_numpy within dh_python overrides.
+  * deb/control:
+    + bump standards version to 4.0.0 (no further changes needed).
+  * use debhelper level 10 (changes in deb/compat and deb/control).
+  * drop manpage of deprecated pycc (manpages not yet distributed).
+  * set up alternatives for CLI script:
+    + add postinst and prerm maintscripts for both binaries.
+    + deb/rules: drop extra info on install-scripts about location.
+  * set up full DEP-8 testing:
+    + add testscripts deb/tests/python{2,3}-numba.
+    + add testscripts and needed deps to deb/tests/control.
+    + drop deb/tests/simpletest.py{2,3}.sh.
+  * drop unused deb/python3-numba.lintian-overrides.
+
+ -- Daniel Stender <stender@debian.org>  Sun, 23 Jul 2017 17:14:38 +0200
+
+numba (0.34.0-1) experimental; urgency=medium
+
+  * New upstream release:
+    + bump llvmlite build-deps to 0.19.0 in deb/control.
+  * deb/control: add version to llvmlite runtime deps (Closes: #864365).
+  * deb/rules: add info on install-scripts export.
+
+ -- Daniel Stender <stender@debian.org>  Sun, 16 Jul 2017 18:47:42 +0200
+
+numba (0.33.0-1) experimental; urgency=medium
+
+  * New upstream release.
+  * deb/control: bump llvmlite deps.
+  * deb/copyright: expand copyright spans.
+  * deb/rules: failsafe still failing testsuite (Closes: #855577).
+
+ -- Daniel Stender <stender@debian.org>  Sat, 27 May 2017 20:24:54 +0200
+
+numba (0.30.0-3) experimental; urgency=medium
+
+  [ lumin ]
+  * Remove unwanted file "annotation_usecases.py" for the python2
+    package (Closes: #851578).
+  * Add basic autopkgtest support.
+
+ -- Daniel Stender <stender@debian.org>  Fri, 17 Feb 2017 19:11:48 +0100
+
+numba (0.30.0-2) experimental; urgency=medium
+
+  * deb/control:
+    + add version to llvmlite build-dep.
+  * deb/rules:
+    + run pytest in builddir and not from builddir.
+    + remove failsafe for tests.
+  * deb/clean:
+    + add .cache/.
+
+ -- Daniel Stender <stender@debian.org>  Thu, 29 Dec 2016 19:50:40 +0100
+
+numba (0.30.0-1) experimental; urgency=medium
+
+  * New upstream release.
+  * deb/watch: corrected and improved.
+
+ -- Daniel Stender <stender@debian.org>  Sat, 24 Dec 2016 23:29:39 +0100
+
+numba (0.29.0-1) experimental; urgency=medium
+
+  * New upstream release:
+    + unfuzz sphinx-rtd-theme.patch.
+  * Build Python 2 package (changes in deb/control and rules):
+    + add python-funcsigs and singledispatch to build-deps.
+  * deb/control:
+    + bump standards to 3.9.8 (no changes needed).
+    + add missing llvmlite to binary package deps.
+  * deb/clean:
+    + add more cruft.
+  * deb/rules:
+    + add export for PYBUILD_INSTALL_ARGS (put scripts into /usr/share,
+      drop deb/python3-numba.manpages temporarily).
+    + add discarded http_proxy to sphinx-build.
+    + add override for gencontrol, carrying dh{,3}-numpy calls.
+  * add deb/gbp.conf.
+  * let deb/clean handle egg-info/ (added), not deb/source/options
+    (dropped).
+  * build docs with Sphinx 2 in build folder (spare in-place extensions,
+    deal with versioneer from __init__.py, work around problems with
+    Sphinx 3):
+    + build-depend on Sphinx 2 in deb/clean.
+    + remove in-place creation of extensions in deb/rules.
+    + run sphinx-build from build dir in rules (before that, copy docs into).
+    + drop in-place extensions from deb/clean (not needed).
+  * add no-git-in-generate_lower_listing.patch.
+
+ -- Daniel Stender <stender@debian.org>  Fri, 23 Dec 2016 16:05:43 +0100
+
+numba (0.23.1-1) experimental; urgency=medium
+
+  * Initial release (Closes: #743877).
+
+ -- Daniel Stender <stender@debian.org>  Fri, 04 Mar 2016 07:32:35 +0100

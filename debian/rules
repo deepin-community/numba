@@ -1,4 +1,46 @@
 #!/usr/bin/make -f
+#export DH_VERBOSE=1
+#export DEB_BUILD_OPTIONS=nocheck
+export DEB_BUILD_MAINT_OPTIONS = hardening=+all
+export PYBUILD_NAME            = numba
+export PYBUILD_INSTALL_ARGS    = --install-scripts=/usr/share/{package}
+
+# Disable TBB as Numba only supports up 2022.05.
+# https://github.com/numba/numba/issues/8487
+export NUMBA_DISABLE_TBB=1
+
+SPHINX_BUILD = $(shell py3versions -d) /usr/bin/sphinx-build
+PYBUILD_DEFAULT_VERSION = $(shell py3versions -v -d)
+
+PYBUILD_DIR = $(shell pybuild --print {build_dir} | grep $(PYBUILD_DEFAULT_VERSION) )
 
 %:
-	dh $@
+	dh $@ --with python3,sphinxdoc --buildsystem=pybuild
+
+override_dh_auto_test-indep:
+	echo "Tests are performed for arch builds only".
+
+override_dh_auto_test-arch:
+ifeq (,$(findstring nocheck,$(DEB_BUILD_OPTIONS)))
+	PYBUILD_SYSTEM=custom \
+	PYBUILD_TEST_ARGS="ls {build_dir} && cd {build_dir} && MPLBACKEND=Agg {interpreter} -Wd runtests.py --exclude-tags='long-running,gdb,compiled_caching' -v -m --random 0.2 -- numba.tests"  dh_auto_test || true
+endif
+
+override_dh_installchangelogs:
+	dh_installchangelogs -A CHANGE_LOG
+
+override_dh_installdocs:
+	dh_installdocs -A README.rst
+ifeq (,$(findstring nodoc, $(DEB_BUILD_OPTIONS)))
+	cp -a docs CHANGE_LOG $(PYBUILD_DIR)
+	http_proxy='127.0.0.1:9' PYTHONPATH=$(PYBUILD_DIR):$${PYTHONPATH} $(SPHINX_BUILD) -N -bhtml \
+			   $(PYBUILD_DIR)/docs/source/ \
+			   debian/numba-doc/usr/share/doc/numba-doc/html/
+endif
+
+override_dh_python3:
+	dh_python3
+	dh_numpy3
+
+override_dh_compress:
+	dh_compress -X.ipynb -X.ods -X.py # save examples and notebooks

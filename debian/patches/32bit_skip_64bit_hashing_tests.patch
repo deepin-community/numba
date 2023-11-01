@@ -1,0 +1,26 @@
+--- a/numba/tests/test_hashing.py
++++ b/numba/tests/test_hashing.py
+@@ -22,6 +22,7 @@
+ from numba.cpython.unicode import compile_time_get_string_data
+ from numba.cpython import hashing
+ 
++from numba import platform
+ 
+ def hash_usecase(x):
+     return hash(x)
+@@ -331,6 +332,7 @@
+             tuples = [split(a) for a in values]
+             self.check_hash_values(tuples)
+ 
++    @unittest.skipIf(platform.architecture()[0]=='32bit', reason="64-bit integers required by test are not supported on 32-bit systems")
+     def test_homogeneous_tuples(self):
+         typ = np.uint64
+ 
+@@ -362,6 +364,7 @@
+         self.check_hash_values([(7,), (0,), (0, 0), (0.5,),
+                                 (0.5, (7,), (-2, 3, (4, 6)))])
+ 
++    @unittest.skipIf(platform.architecture()[0]=='32bit', reason="64-bit integers required by test are not supported on 32-bit systems")
+     def test_heterogeneous_tuples(self):
+         modulo = 2**63
+ 

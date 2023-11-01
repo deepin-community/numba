@@ -1,0 +1,15 @@
+--- a/docs/source/conf.py
++++ b/docs/source/conf.py
+@@ -303,9 +303,9 @@
+ # Configuration for intersphinx: refer to the Python standard library
+ # and the Numpy documentation.
+ intersphinx_mapping = {
+-    'python': ('https://docs.python.org/3', None),
+-    'numpy': ('https://numpy.org/doc/stable/', None),
+-    'llvmlite': ('https://llvmlite.readthedocs.io/en/latest/', None),
++    'python': ('https://docs.python.org/3', '/usr/share/doc/python3-doc/html/objects.inv'),
++#    'numpy': ('https://numpy.org/doc/stable/', None),
++#    'llvmlite': ('https://llvmlite.readthedocs.io/en/latest/', None),
+ }
+ 
+ 

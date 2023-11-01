@@ -1,0 +1,3 @@
+# This is the expected machine generated code for test purposes.
+# All on one line
+numba source: very-long-line-length-in-source-file 910 > 512 [numba/tests/test_nrt.py:406]

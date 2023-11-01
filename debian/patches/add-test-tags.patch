@@ -1,0 +1,214 @@
+--- a/numba/tests/test_runtests.py
++++ b/numba/tests/test_runtests.py
+@@ -111,7 +111,7 @@
+             self.assertTrue(count > 0)
+             return count
+ 
+-        tags = ['long_running', 'long_running, important']
++        tags = ['long_running', 'long_running, important', 'compiled_caching']
+ 
+         total = get_count(['numba.tests'])
+ 
+--- a/numba/tests/support.py
++++ b/numba/tests/support.py
+@@ -76,7 +76,7 @@
+ nrt_flags.nrt = True
+ 
+ 
+-tag = testing.make_tag_decorator(['important', 'long_running', 'always_test'])
++tag = testing.make_tag_decorator(['important', 'long_running', 'always_test', 'compiled_caching'])
+ 
+ # Use to mark a test as a test that must always run when sharded
+ always_test = tag('always_test')
+--- a/numba/tests/test_caching.py
++++ b/numba/tests/test_caching.py
+@@ -25,6 +25,7 @@
+     run_in_new_process_caching,
+     skip_if_typeguard,
+     skip_parfors_unsupported,
++    tag,
+     temp_directory,
+ )
+ 
+@@ -34,6 +35,9 @@
+     ipykernel = None
+ 
+ 
++compiled_caching = tag('compiled_caching')
++
++
+ def check_access_is_preventable():
+     # This exists to check whether it is possible to prevent access to
+     # a file/directory through the use of `chmod 500`. If a user has
+@@ -288,6 +292,7 @@
+ 
+ class TestCache(DispatcherCacheUsecasesTest):
+ 
++    @compiled_caching
+     def test_caching(self):
+         self.check_pycache(0)
+         mod = self.import_module()
+@@ -322,6 +327,7 @@
+         # Check the code runs ok from another process
+         self.run_in_separate_process()
+ 
++    @compiled_caching
+     def test_caching_nrt_pruned(self):
+         self.check_pycache(0)
+         mod = self.import_module()
+@@ -335,6 +341,7 @@
+         self.check_pycache(3)  # 1 index, 2 data
+         self.check_hits(f, 0, 2)
+ 
++    @compiled_caching
+     def test_inner_then_outer(self):
+         # Caching inner then outer function is ok
+         mod = self.import_module()
+@@ -355,6 +362,7 @@
+         self.assertPreciseEqual(f(3.5, 2), 2.5)
+         self.check_pycache(6)  # 2 index, 4 data
+ 
++    @compiled_caching
+     def test_outer_then_inner(self):
+         # Caching outer then inner function is ok
+         mod = self.import_module()
+@@ -369,6 +377,7 @@
+         self.assertPreciseEqual(f(3.5, 2), 6.5)
+         self.check_pycache(5)  # 2 index, 3 data
+ 
++    @compiled_caching
+     def test_no_caching(self):
+         mod = self.import_module()
+ 
+@@ -405,6 +414,7 @@
+         self.assertIn('Cannot cache compiled function "use_big_array" '
+                       'as it uses dynamic globals', str(w[0].message))
+ 
++    @compiled_caching
+     def test_ctypes(self):
+         # Functions using a ctypes pointer can't be cached and raise
+         # a warning.
+@@ -423,6 +433,7 @@
+                 str(w[0].message),
+             )
+ 
++    @compiled_caching
+     def test_closure(self):
+         mod = self.import_module()
+ 
+@@ -439,6 +450,7 @@
+             self.assertPreciseEqual(f(3), 12) # 3 + 9 = 12
+             self.check_pycache(5) # 1 nbi, 4 nbc
+ 
++    @compiled_caching
+     def test_first_class_function(self):
+         mod = self.import_module()
+         f = mod.first_class_function_usecase
+@@ -450,6 +462,7 @@
+         # with a different callback.
+         self.check_pycache(7)
+ 
++    @compiled_caching
+     def test_cache_reuse(self):
+         mod = self.import_module()
+         mod.add_usecase(2, 3)
+@@ -717,6 +730,7 @@
+         # Turn off sequential parfor lowering
+         parfor.sequential_parfor_lowering = False
+ 
++    @compiled_caching
+     def test_caching(self):
+         mod = self.import_module()
+         self.check_pycache(0)
+@@ -742,6 +756,7 @@
+         self.assertGreater(match_count, 0,
+                            msg='nothing to compare')
+ 
++    @compiled_caching
+     def test_user_set_cpu_name(self):
+         self.check_pycache(0)
+         mod = self.import_module()
+@@ -770,6 +785,7 @@
+         self.assertEqual(key_generic[1][1], 'generic')
+         self.assertEqual(key_generic[1][2], '')
+ 
++    @compiled_caching
+     def test_user_set_cpu_features(self):
+         self.check_pycache(0)
+         mod = self.import_module()
+@@ -1050,6 +1066,7 @@
+     def check_module(self, mod):
+         mod.self_test()
+ 
++    @compiled_caching
+     def test_caching(self):
+         self.check_pycache(0)
+         mod = self.import_module()
+--- a/numba/tests/test_parfors_caching.py
++++ b/numba/tests/test_parfors_caching.py
+@@ -4,9 +4,11 @@
+ 
+ import numpy as np
+ 
+-from numba.tests.support import skip_parfors_unsupported
++from numba.tests.support import skip_parfors_unsupported, tag
+ from .test_caching import DispatcherCacheUsecasesTest
+ 
++compiled_caching = tag('compiled_caching')
++
+ 
+ @skip_parfors_unsupported
+ class TestParforsCache(DispatcherCacheUsecasesTest):
+@@ -32,14 +34,17 @@
+ 
+         self.run_in_separate_process()
+ 
++    @compiled_caching
+     def test_arrayexprs(self):
+         f = 'arrayexprs_case'
+         self.run_test(f)
+ 
++    @compiled_caching
+     def test_prange(self):
+         f = 'prange_case'
+         self.run_test(f)
+ 
++    @compiled_caching
+     def test_caller(self):
+         f = 'caller_case'
+         # num_funcs=3 because, there's the `caller_case()` which calls
+@@ -75,6 +80,7 @@
+             raise AssertionError(f"process failed with code {popen.returncode}:"
+                                  f"stderr follows\n{err.decode()}\n")
+ 
++    @compiled_caching
+     def test_caching(self):
+         self.check_pycache(0)
+         self.run_in_separate_process(1)
+--- a/numba/tests/npyufunc/test_caching.py
++++ b/numba/tests/npyufunc/test_caching.py
+@@ -5,12 +5,15 @@
+ 
+ import numpy as np
+ 
+-from numba.tests.support import capture_cache_log
++from numba.tests.support import capture_cache_log, tag
+ from numba.tests.test_caching import BaseCacheTest
+ from numba.core import config
+ import unittest
+ 
+ 
++compiled_caching = tag('compiled_caching')
++
++
+ class UfuncCacheTest(BaseCacheTest):
+     """
+     Since the cache stats is not exposed by ufunc, we test by looking at the
+@@ -135,6 +138,7 @@
+ 
+ class TestGUfuncCacheTest(UfuncCacheTest):
+ 
++    @compiled_caching
+     def test_filename_prefix(self):
+         mod = self.import_module()
+         usecase = getattr(mod, "direct_gufunc_cache_usecase")

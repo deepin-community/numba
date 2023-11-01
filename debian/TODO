@@ -1,0 +1,13 @@
+1. enrich manpages
+
+2. fix testsuite import error, remove failsafe, put py.test -x
+
+3. check skips in the tests
+
+4. set up DEP-8 testing
+
+5. package Versioneer (#766132) - that converns also Llvmlite
+
+6. improve hardening
+
+Daniel Stender <stender@debian.org>

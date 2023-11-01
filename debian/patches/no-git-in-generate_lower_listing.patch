@@ -1,0 +1,24 @@
+Description: prevent to query the Git history whatsoever
+Author: Daniel Stender <stender@debian.org>
+Modified-By: Mo Zhou <cdluminate@gmail.com>
+Origin: <upstream|backport|vendor|other>, <URL, required except if Author is present>
+Forwarded: no
+Last-Update: 2018-03-21
+
+--- a/numba/scripts/generate_lower_listing.py
++++ b/numba/scripts/generate_lower_listing.py
+@@ -18,10 +18,12 @@
+ import numba
+ from numba.core.registry import cpu_target
+ 
++from numba._version import get_versions
+ 
+ def git_hash():
+-    out = check_output(['git', 'log', "--pretty=format:'%H'", '-n', '1'])
+-    return out.decode('ascii').strip("'\"")
++    #out = check_output(['git', 'log', "--pretty=format:'%H'", '-n', '1'])
++    out = get_versions()['full-revisionid']
++    return out.strip("'\"")
+ 
+ 
+ def get_func_name(fn):

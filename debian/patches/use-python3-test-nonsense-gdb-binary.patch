@@ -1,0 +1,17 @@
+Author: Diane Trout <diane@ghic.org>
+Description: By default Debian doesn't have a python executable installed
+ use the default python3 name instead.
+Forwarded: no (This is more to comply with our environment, than a general
+ upstream issue)
+
+--- a/numba/tests/test_cli.py
++++ b/numba/tests/test_cli.py
+@@ -267,7 +267,7 @@
+     def test_nonsense_gdb_binary(self):
+         # Tests that a nonsense binary specified as gdb it picked up ok
+         env = os.environ.copy()
+-        env['NUMBA_GDB_BINARY'] = 'python' # 'python' isn't gdb!
++        env['NUMBA_GDB_BINARY'] = sys.executable # 'python' isn't gdb!
+         cmdline = [sys.executable, "-m", "numba", "-g"]
+         stdout, stderr = run_cmd(cmdline, env=env)
+         self.assertIn("Testing gdb binary failed", stdout)
