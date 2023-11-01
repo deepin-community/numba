@@ -1,0 +1,14 @@
+Author: Diane Trout <diane@ghic.org>
+Description: https://github.com/numba/numba/issues/7452 suggested
+ adding the below code for armv7l support
+
+--- a/numba/core/cpu.py
++++ b/numba/core/cpu.py
+@@ -53,6 +53,7 @@
+         # Add ARM ABI functions from libgcc_s
+         if platform.machine() == 'armv7l':
+             ll.load_library_permanently('libgcc_s.so.1')
++            ll.load_library_permanently('libatomic.so.1')
+ 
+         # Map external C functions.
+         externals.c_math_functions.install(self)

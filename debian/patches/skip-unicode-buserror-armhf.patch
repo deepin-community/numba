@@ -1,0 +1,33 @@
+Author: Diane Trout <diane@ghic.org>
+Description: Skip tests triggering bus errors when running armhf on arm64 when hash() 
+ accesses complex multibyte unicode strings.
+Bug: https://github.com/numba/numba/issues/6659
+Forwarded: no
+
+--- a/numba/tests/test_unicode.py
++++ b/numba/tests/test_unicode.py
+@@ -5,7 +5,7 @@
+ from numba import njit, typeof
+ from numba.core import types
+ import unittest
+-from numba.tests.support import (TestCase, no_pyobj_flags, MemoryLeakMixin)
++from numba.tests.support import (TestCase, no_pyobj_flags, MemoryLeakMixin, _is_armv_ge6l)
+ from numba.core.errors import TypingError, UnsupportedError
+ from numba.cpython.unicode import _MAX_UNICODE
+ from numba.core.types.functions import _header_lead
+@@ -1348,6 +1348,7 @@
+                                      cfunc(s, sl),
+                                      "'%s'[%d:%d]?" % (s, i, j))
+ 
++    @unittest.skipIf(_is_armv_ge6l, "Unaligned memory access unsupported on armhf on arm64")
+     def test_getitem_slice2_kind(self):
+         # See issue #6135. Also see note in test_getitem_scalar_kind regarding
+         # testing.
+@@ -1375,6 +1376,7 @@
+                                          cfunc(s, sl),
+                                          "'%s'[%d:%d:%d]?" % (s, i, j, k))
+ 
++    @unittest.skipIf(_is_armv_ge6l, "Unaligned memory access unsupported on armhf on arm64")
+     def test_getitem_slice3_kind(self):
+         # See issue #6135. Also see note in test_getitem_scalar_kind regarding
+         # testing.

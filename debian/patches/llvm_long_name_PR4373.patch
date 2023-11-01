@@ -1,0 +1,30 @@
+From 4e42221e368b4486be2ec8381f20382fc3609351 Mon Sep 17 00:00:00 2001
+From: Todd <toddrme2178@gmail.com>
+Date: Sat, 27 Jul 2019 18:29:47 -0400
+Subject: [PATCH] Set maximum name size to maximum allowable value
+
+Fix for #3876 without needing to patch LLVM.
+
+This is upstream PR4373 for fixing LLVM handling of long names.
+
+See also upstream Issue#5771, and LLVM review at
+https://reviews.llvm.org/D41296
+
+---
+ numba/__init__.py | 5 +++++
+ 1 file changed, 5 insertions(+)
+
+--- a/numba/__init__.py
++++ b/numba/__init__.py
+@@ -177,6 +177,11 @@
+                "Please update llvmlite." %
+                (_min_llvm_version + llvm_version_info))
+         raise ImportError(msg)
++    
++    try:
++        llvmlite.binding.set_option("tmp", "-non-global-value-max-name-size=4294967295")
++    except:
++        pass
+ 
+     check_jit_execution()
+ 

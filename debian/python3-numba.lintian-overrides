@@ -1,0 +1,7 @@
+#
+# This is a tiny library that really does seem to only
+# use a couple C macros and a struct and really may not
+# use an C library symbol
+#
+python3-numba: library-not-linked-against-libc [usr/lib/python3/dist-packages/numba/np/ufunc/_num_threads.cpython-310-x86_64-linux-gnu.so]
+python3-numba: library-not-linked-against-libc [usr/lib/python3/dist-packages/numba/np/ufunc/_num_threads.cpython-311-x86_64-linux-gnu.so]

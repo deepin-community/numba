@@ -1,0 +1,9 @@
+Document: numba-documentation
+Title: Documentation of python3-numba
+Author: Continuum Analytics, Inc. <numba-users@continuum.io>
+Abstract: Numba is a NumPy-aware optimizing compiler for Python
+Section: Programming/Python
+
+Format: HTML
+Index: /usr/share/doc/numba-doc/html/index.html
+Files: /usr/share/doc/numba-doc/html/*.html

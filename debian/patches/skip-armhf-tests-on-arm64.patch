@@ -1,0 +1,79 @@
+Author: Diane Trout <diane@ghic.org>
+Description: Debian builds packages on armv7l systems which don't
+ support unaligned memory access and upstream tested for armv7l to
+ avoid the tests that would trigger that problem. Unfortunately Debian
+ runs the CI tests in a 32-bit user space on arm64 machines. The
+ archecture reported on those machines is armv8l and so the skipIf
+ test wasn't being triggered.
+Forwarded: https://github.com/numba/numba/issues/6345#issuecomment-764993001
+
+
+--- a/numba/tests/support.py
++++ b/numba/tests/support.py
+@@ -115,7 +115,7 @@
+ _win_reason = 'Windows-only test'
+ windows_only = unittest.skipIf(not sys.platform.startswith('win'), _win_reason)
+ 
+-_is_armv7l = platform.machine() == 'armv7l'
++_is_armv_ge6l = platform.machine().startswith('armv') and int(platform.machine()[len('armv'):-1]) >= 6
+ 
+ disabled_test = unittest.skipIf(True, 'Test disabled')
+ 
+--- a/numba/tests/test_dispatcher.py
++++ b/numba/tests/test_dispatcher.py
+@@ -33,7 +33,7 @@
+ except ImportError:
+     pygments = None
+ 
+-_is_armv7l = platform.machine() == 'armv7l'
++_is_armv_ge6l = platform.machine().startswith('armv') and int(platform.machine()[len('armv'):-1]) >= 6
+ 
+ 
+ def dummy(x):
+@@ -387,7 +387,7 @@
+         self.assertIs(ref(), None)
+ 
+     @needs_lapack
+-    @unittest.skipIf(_is_armv7l, "Unaligned loads unsupported")
++    @unittest.skipIf(_is_armv_ge6l, "Unaligned loads unsupported")
+     def test_misaligned_array_dispatch(self):
+         # for context see issue #2937
+         def foo(a):
+@@ -426,7 +426,7 @@
+         check("C_contig_misaligned", C_contig_misaligned)
+         check("F_contig_misaligned", F_contig_misaligned)
+ 
+-    @unittest.skipIf(_is_armv7l, "Unaligned loads unsupported")
++    @unittest.skipIf(_is_armv_ge6l, "Unaligned loads unsupported")
+     def test_immutability_in_array_dispatch(self):
+ 
+         # RO operation in function
+@@ -468,7 +468,7 @@
+               disable_write_bit=True)
+ 
+     @needs_lapack
+-    @unittest.skipIf(_is_armv7l, "Unaligned loads unsupported")
++    @unittest.skipIf(_is_armv_ge6l, "Unaligned loads unsupported")
+     def test_misaligned_high_dimension_array_dispatch(self):
+ 
+         def foo(a):
+--- a/numba/tests/test_linalg.py
++++ b/numba/tests/test_linalg.py
+@@ -11,7 +11,7 @@
+ from numba import jit, njit, typeof
+ from numba.core import errors
+ from numba.tests.support import (TestCase, tag, needs_lapack, needs_blas,
+-                                 _is_armv7l, EnableNRTStatsMixin)
++                                 _is_armv_ge6l, EnableNRTStatsMixin)
+ from .matmul_usecase import matmul_usecase
+ import unittest
+ 
+@@ -97,7 +97,7 @@
+         return new
+ 
+     def check_func_out(self, pyfunc, cfunc, args, out):
+-        copier = self._aligned_copy if _is_armv7l else np.copy
++        copier = self._aligned_copy if _is_armv_ge6l else np.copy
+         with self.assertNoNRTLeak():
+             expected = copier(out)
+             got = copier(out)

@@ -1,0 +1,13 @@
+diff --git a/docs/source/_ext/ghfiles.py b/docs/source/_ext/ghfiles.py
+index 2a71982..72bcbc6 100644
+--- a/docs/source/_ext/ghfiles.py
++++ b/docs/source/_ext/ghfiles.py
+@@ -9,7 +9,7 @@ logger = logging.getLogger(__name__)
+ # use an old git trick, to get the top-level, could have used ../ etc.. but
+ # this will be fine..
+ top = subprocess.check_output(shlex.split(
+-    "git rev-parse --show-toplevel")).strip().decode("utf-8")
++    "true rev-parse --show-toplevel")).strip().decode("utf-8")
+ 
+ 
+ def make_ref(text):
