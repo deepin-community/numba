@@ -167,15 +167,12 @@ def skip_with_cuda_python(reason):
     return unittest.skipIf(driver.USE_NV_BINDING, reason)
 
 
-def skip_unless_cuda_python(reason):
-    return unittest.skipIf(not driver.USE_NV_BINDING, reason)
-
-
 def cudadevrt_missing():
     if config.ENABLE_CUDASIM:
         return False
     try:
-        libs.check_static_lib('cudadevrt')
+        path = libs.get_cudalib('cudadevrt', static=True)
+        libs.check_static_lib(path)
     except FileNotFoundError:
         return True
     return False

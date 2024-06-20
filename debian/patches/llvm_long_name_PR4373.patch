@@ -16,7 +16,7 @@ https://reviews.llvm.org/D41296
 
 --- a/numba/__init__.py
 +++ b/numba/__init__.py
-@@ -177,6 +177,11 @@
+@@ -178,6 +178,11 @@
                 "Please update llvmlite." %
                 (_min_llvm_version + llvm_version_info))
          raise ImportError(msg)

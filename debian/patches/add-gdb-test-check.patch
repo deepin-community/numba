@@ -1,3 +1,9 @@
+Author: Diane Trout <diane@ghic.org>
+Description: Try to get some gdb tests to work by requiring
+ NUMBA_OPT=0.
+ Also remove a few very unstable gdb tests
+Forwarded: No
+
 --- a/numba/tests/gdb/test_array_arg.py
 +++ b/numba/tests/gdb/test_array_arg.py
 @@ -2,10 +2,11 @@
@@ -100,7 +106,7 @@
  class Test(TestCase):
 --- a/numba/tests/support.py
 +++ b/numba/tests/support.py
-@@ -188,6 +188,11 @@
+@@ -193,6 +193,11 @@
  needs_setuptools = unittest.skipUnless(has_setuptools, 'Test needs setuptools')
  
  
