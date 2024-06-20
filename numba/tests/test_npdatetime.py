@@ -411,10 +411,18 @@ class TestTimedeltaArithmetic(TestCase):
         check(TD('Nat', 'ms'), TD('Nat', 's'), True)
         check(TD('Nat'), TD(1), False)
         # Incompatible units => timedeltas compare unequal
-        check(TD(1, 'Y'), TD(365, 'D'), False)
-        check(TD(1, 'Y'), TD(366, 'D'), False)
-        # ... except when both are NaT!
-        check(TD('NaT', 'W'), TD('NaT', 'D'), True)
+        if numpy_version < (1, 25):
+            check(TD(1, 'Y'), TD(365, 'D'), False)
+            check(TD(1, 'Y'), TD(366, 'D'), False)
+            # ... except when both are NaT!
+            check(TD('NaT', 'W'), TD('NaT', 'D'), True)
+        else:
+            # incompatible units raise
+            # The exception is different depending on Python mode
+            with self.assertRaises((TypeError, TypingError)):
+                eq(TD(1, 'Y'), TD(365, 'D'))
+            with self.assertRaises((TypeError, TypingError)):
+                ne(TD(1, 'Y'), TD(365, 'D'))
 
     def test_lt_ge(self):
         lt = self.jit(lt_usecase)
@@ -844,21 +852,21 @@ class TestMetadataScalingFactor(TestCase):
     and timedelta64 dtypes.
     """
 
-    def test_datetime(self, **jitargs):
+    def test_datetime(self, jitargs={'forceobj':True}):
         eq = jit(**jitargs)(eq_usecase)
         self.assertTrue(eq(DT('2014', '10Y'), DT('2010')))
 
     def test_datetime_npm(self):
         with self.assertTypingError():
-            self.test_datetime(nopython=True)
+            self.test_datetime(jitargs={'nopython':True})
 
-    def test_timedelta(self, **jitargs):
+    def test_timedelta(self, jitargs={'forceobj':True}):
         eq = jit(**jitargs)(eq_usecase)
         self.assertTrue(eq(TD(2, '10Y'), TD(20, 'Y')))
 
     def test_timedelta_npm(self):
         with self.assertTypingError():
-            self.test_timedelta(nopython=True)
+            self.test_timedelta(jitargs={'nopython':True})
 
 
 class TestDatetimeDeltaOps(TestCase):

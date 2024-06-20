@@ -12,8 +12,8 @@ export PYTHONFAULTHANDLER=1
 # enable new style error handling
 export NUMBA_CAPTURED_ERRORS="new_style"
 
-# Enable subprocess tests
-export SUBPROC_TEST=1
+# Set to 1 to enable subprocess tests
+export SUBPROC_TEST=0
 
 # Let numba know where to cache precompiled results
 export NUMBA_CACHE_DIR=$AUTOPKGTEST_TMP/.cache
@@ -58,5 +58,8 @@ for py in $(py3versions -d); do
     fi
 
     echo "[*] Testing with $py:"
-    MPLBACKEND=Agg $py -m numba.runtests -b --exclude-tags='long-running,gdb,compiled_caching' -k 'not (test_pycc_module or test_no_nrt_on_njit_decoration or test_slp)' -v -m $TEST_NPROCS 2>&1
+    MPLBACKEND=Agg $py -m numba.runtests -b --exclude-tags='long-running,gdb,compiled_caching' -v -m $TEST_NPROCS --random 0.2 2>&1
+    # pytest with xdist seems faster and supports --pdb when debugging,
+    # also has a timeout option
+    # python3 -m pytest --pyargs numba.tests -m "not (long-running or gdb or compiled_caching)" -v -n auto --timeout 300 
 done

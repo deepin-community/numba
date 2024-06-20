@@ -3,5 +3,8 @@
 # use a couple C macros and a struct and really may not
 # use an C library symbol
 #
-python3-numba: library-not-linked-against-libc [usr/lib/python3/dist-packages/numba/np/ufunc/_num_threads.cpython-310-x86_64-linux-gnu.so]
-python3-numba: library-not-linked-against-libc [usr/lib/python3/dist-packages/numba/np/ufunc/_num_threads.cpython-311-x86_64-linux-gnu.so]
+python3-numba: library-not-linked-against-libc [usr/lib/python3/dist-packages/numba/np/ufunc/_num_threads.cpython-*.so]
+# This library seems to only call Python interpreter functions
+python3-numba: hardening-no-fortify-functions [usr/lib/python3/dist-packages/numba/_dynfunc.cpython-*.so]
+# We don't have CUDA available, how could the prerequisites be available?
+python3-numba: shared-library-lacks-prerequisites [usr/lib/python3/dist-packages/numba/cuda/cudadrv/_extras.cpython-*.so]
