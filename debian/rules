@@ -5,10 +5,6 @@ export DEB_BUILD_MAINT_OPTIONS = hardening=+all
 export PYBUILD_NAME            = numba
 export PYBUILD_INSTALL_ARGS    = --install-scripts=/usr/share/{package}
 
-# Disable TBB as Numba only supports up 2022.05.
-# https://github.com/numba/numba/issues/8487
-export NUMBA_DISABLE_TBB=1
-
 SPHINX_BUILD = $(shell py3versions -d) /usr/bin/sphinx-build
 PYBUILD_DEFAULT_VERSION = $(shell py3versions -v -d)
 
@@ -23,7 +19,7 @@ override_dh_auto_test-indep:
 override_dh_auto_test-arch:
 ifeq (,$(findstring nocheck,$(DEB_BUILD_OPTIONS)))
 	PYBUILD_SYSTEM=custom \
-	PYBUILD_TEST_ARGS="ls {build_dir} && cd {build_dir} && MPLBACKEND=Agg {interpreter} -Wd runtests.py --exclude-tags='long-running,gdb,compiled_caching' -v -m --random 0.2 -- numba.tests"  dh_auto_test || true
+	PYBUILD_TEST_ARGS="ls {build_dir} && cd {build_dir} && MPLBACKEND=Agg {interpreter} -Wd runtests.py --exclude-tags='long-running,gdb,compiled_caching' -v -m --random 0.2 -- numba.tests"  dh_auto_test
 endif
 
 override_dh_installchangelogs:

@@ -15,7 +15,7 @@ Forwarded: no
  from numba.core.errors import TypingError, UnsupportedError
  from numba.cpython.unicode import _MAX_UNICODE
  from numba.core.types.functions import _header_lead
-@@ -1348,6 +1348,7 @@
+@@ -1349,6 +1349,7 @@
                                       cfunc(s, sl),
                                       "'%s'[%d:%d]?" % (s, i, j))
  
@@ -23,7 +23,7 @@ Forwarded: no
      def test_getitem_slice2_kind(self):
          # See issue #6135. Also see note in test_getitem_scalar_kind regarding
          # testing.
-@@ -1375,6 +1376,7 @@
+@@ -1376,6 +1377,7 @@
                                           cfunc(s, sl),
                                           "'%s'[%d:%d:%d]?" % (s, i, j, k))
  

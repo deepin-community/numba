@@ -5,14 +5,14 @@ Installation
 Compatibility
 -------------
 
-For software compatability, please see the section on :ref:`version support
+For software compatibility, please see the section on :ref:`version support
 information<numba_support_info>` for details.
 
 Our supported platforms are:
 
 * Linux x86_64
 * Linux ppcle64 (POWER8, POWER9)
-* Windows 7 and later (32-bit and 64-bit)
+* Windows 10 and later (64-bit)
 * OS X 10.9 and later (64-bit and unofficial support on M1/Arm64)
 * \*BSD (unofficial support only)
 * NVIDIA GPUs of compute capability 5.0 and later
@@ -110,7 +110,7 @@ If you are building Numba from source for other reasons, first follow the
 Once that is completed, you can download the latest Numba source code from
 `Github <https://github.com/numba/numba>`_::
 
-    $ git clone git://github.com/numba/numba.git
+    $ git clone https://github.com/numba/numba.git
 
 Source archives of the latest release can also be found on
 `PyPI <https://pypi.org/project/numba/>`_.  In addition to ``llvmlite``, you will also need:
@@ -262,6 +262,14 @@ information.
 +----------++--------------+---------------------------+----------------------------+------------------------------+-------------------+-----------------------------+
 | Numba     | Release date | Python                    | NumPy                      | llvmlite                     | LLVM              | TBB                         |
 +===========+==============+===========================+============================+==============================+===================+=============================+
+| 0.59.1    | 2024-03-18   | 3.9.x <= version < 3.13   | 1.22 <= version < 1.27     | 0.42.x                       | 14.x              | 2021.6 <= version           |
++-----------+--------------+---------------------------+----------------------------+------------------------------+-------------------+-----------------------------+
+| 0.59.0    | 2024-01-31   | 3.9.x <= version < 3.13   | 1.22 <= version < 1.27     | 0.42.x                       | 14.x              | 2021.6 <= version           |
++-----------+--------------+---------------------------+----------------------------+------------------------------+-------------------+-----------------------------+
+| 0.58.1    | 2023-10-17   | 3.8.x <= version < 3.12   | 1.22 <= version < 1.27     | 0.41.x                       | 14.x              | 2021.6 <= version           |
++-----------+--------------+---------------------------+----------------------------+------------------------------+-------------------+-----------------------------+
+| 0.58.0    | 2023-09-20   | 3.8.x <= version < 3.12   | 1.22 <= version < 1.26     | 0.41.x                       | 14.x              | 2021.6 <= version           |
++-----------+--------------+---------------------------+----------------------------+------------------------------+-------------------+-----------------------------+
 | 0.57.1    | 2023-06-21   | 3.8.x <= version < 3.12   | 1.21 <= version < 1.25     | 0.40.x                       | 14.x              | 2021.6 <= version           |
 +-----------+--------------+---------------------------+----------------------------+------------------------------+-------------------+-----------------------------+
 | 0.57.0    | 2023-05-01   | 3.8.x <= version < 3.12   | 1.21 <= version < 1.25     | 0.40.x                       | 14.x              | 2021.6 <= version           |

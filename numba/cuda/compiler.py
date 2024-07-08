@@ -1,16 +1,18 @@
+from llvmlite import ir
 from numba.core.typing.templates import ConcreteTemplate
 from numba.core import types, typing, funcdesc, config, compiler, sigutils
 from numba.core.compiler import (sanitize_compile_result_entries, CompilerBase,
                                  DefaultPassBuilder, Flags, Option,
                                  CompileResult)
 from numba.core.compiler_lock import global_compiler_lock
-from numba.core.compiler_machinery import (LoweringPass, AnalysisPass,
+from numba.core.compiler_machinery import (LoweringPass,
                                            PassManager, register_pass)
-from numba.core.errors import NumbaInvalidConfigWarning, TypingError
+from numba.core.errors import NumbaInvalidConfigWarning
 from numba.core.typed_passes import (IRLegalization, NativeLowering,
                                      AnnotateTypes)
 from warnings import warn
 from numba.cuda.api import get_current_device
+from numba.cuda.target import CUDACABICallConv
 
 
 def _nvvm_options_type(x):
@@ -114,41 +116,6 @@ class CreateLibrary(LoweringPass):
         return True
 
 
-@register_pass(mutates_CFG=False, analysis_only=True)
-class CUDALegalization(AnalysisPass):
-
-    _name = "cuda_legalization"
-
-    def __init__(self):
-        AnalysisPass.__init__(self)
-
-    def run_pass(self, state):
-        # Early return if NVVM 7
-        from numba.cuda.cudadrv.nvvm import NVVM
-        if NVVM().is_nvvm70:
-            return False
-        # NVVM < 7, need to check for charseq
-        typmap = state.typemap
-
-        def check_dtype(dtype):
-            if isinstance(dtype, (types.UnicodeCharSeq, types.CharSeq)):
-                msg = (f"{k} is a char sequence type. This type is not "
-                       "supported with CUDA toolkit versions < 11.2. To "
-                       "use this type, you need to update your CUDA "
-                       "toolkit - try 'conda install cudatoolkit=11' if "
-                       "you are using conda to manage your environment.")
-                raise TypingError(msg)
-            elif isinstance(dtype, types.Record):
-                for subdtype in dtype.fields.items():
-                    # subdtype is a (name, _RecordField) pair
-                    check_dtype(subdtype[1].type)
-
-        for k, v in typmap.items():
-            if isinstance(v, types.Array):
-                check_dtype(v.dtype)
-        return False
-
-
 class CUDACompiler(CompilerBase):
     def define_pipelines(self):
         dpb = DefaultPassBuilder
@@ -159,7 +126,6 @@ class CUDACompiler(CompilerBase):
 
         typed_passes = dpb.define_typed_pipeline(self.state)
         pm.passes.extend(typed_passes.passes)
-        pm.add_pass(CUDALegalization, "CUDA legalization")
 
         lowering_passes = self.define_cuda_lowering_pipeline(self.state)
         pm.passes.extend(lowering_passes.passes)
@@ -242,9 +208,53 @@ def compile_cuda(pyfunc, return_type, args, debug=False, lineinfo=False,
     return cres
 
 
+def cabi_wrap_function(context, lib, fndesc, wrapper_function_name,
+                       nvvm_options):
+    """
+    Wrap a Numba ABI function in a C ABI wrapper at the NVVM IR level.
+
+    The C ABI wrapper will have the same name as the source Python function.
+    """
+    # The wrapper will be contained in a new library that links to the wrapped
+    # function's library
+    library = lib.codegen.create_library(f'{lib.name}_function_',
+                                         entry_name=wrapper_function_name,
+                                         nvvm_options=nvvm_options)
+    library.add_linking_library(lib)
+
+    # Determine the caller (C ABI) and wrapper (Numba ABI) function types
+    argtypes = fndesc.argtypes
+    restype = fndesc.restype
+    c_call_conv = CUDACABICallConv(context)
+    wrapfnty = c_call_conv.get_function_type(restype, argtypes)
+    fnty = context.call_conv.get_function_type(fndesc.restype, argtypes)
+
+    # Create a new module and declare the callee
+    wrapper_module = context.create_module("cuda.cabi.wrapper")
+    func = ir.Function(wrapper_module, fnty, fndesc.llvm_func_name)
+
+    # Define the caller - populate it with a call to the callee and return
+    # its return value
+
+    wrapfn = ir.Function(wrapper_module, wrapfnty, wrapper_function_name)
+    builder = ir.IRBuilder(wrapfn.append_basic_block(''))
+
+    arginfo = context.get_arg_packer(argtypes)
+    callargs = arginfo.from_arguments(builder, wrapfn.args)
+    # We get (status, return_value), but we ignore the status since we
+    # can't propagate it through the C ABI anyway
+    _, return_value = context.call_conv.call_function(
+        builder, func, restype, argtypes, callargs)
+    builder.ret(return_value)
+
+    library.add_ir_module(wrapper_module)
+    library.finalize()
+    return library
+
+
 @global_compiler_lock
 def compile_ptx(pyfunc, sig, debug=False, lineinfo=False, device=False,
-                fastmath=False, cc=None, opt=True):
+                fastmath=False, cc=None, opt=True, abi="numba", abi_info=None):
     """Compile a Python function to PTX for a given set of argument types.
 
     :param pyfunc: The Python function to compile.
@@ -269,14 +279,30 @@ def compile_ptx(pyfunc, sig, debug=False, lineinfo=False, device=False,
     :type cc: tuple
     :param opt: Enable optimizations. Defaults to ``True``.
     :type opt: bool
+    :param abi: The ABI for a compiled function - either ``"numba"`` or
+                ``"c"``. Note that the Numba ABI is not considered stable.
+                The C ABI is only supported for device functions at present.
+    :type abi: str
+    :param abi_info: A dict of ABI-specific options. The ``"c"`` ABI supports
+                     one option, ``"abi_name"``, for providing the wrapper
+                     function's name. The ``"numba"`` ABI has no options.
+    :type abi_info: dict
     :return: (ptx, resty): The PTX code and inferred return type
     :rtype: tuple
     """
+    if abi not in ("numba", "c"):
+        raise NotImplementedError(f'Unsupported ABI: {abi}')
+
+    if abi == 'c' and not device:
+        raise NotImplementedError('The C ABI is not supported for kernels')
+
     if debug and opt:
         msg = ("debug=True with opt=True (the default) "
                "is not supported by CUDA. This may result in a crash"
                " - set debug=False or opt=False.")
         warn(NumbaInvalidConfigWarning(msg))
+
+    abi_info = abi_info or dict()
 
     nvvm_options = {
         'fastmath': fastmath,
@@ -294,10 +320,15 @@ def compile_ptx(pyfunc, sig, debug=False, lineinfo=False, device=False,
     if resty and not device and resty != types.void:
         raise TypeError("CUDA kernel must have void return type.")
 
+    tgt = cres.target_context
+
     if device:
         lib = cres.library
+        if abi == "c":
+            wrapper_name = abi_info.get('abi_name', pyfunc.__name__)
+            lib = cabi_wrap_function(tgt, lib, cres.fndesc, wrapper_name,
+                                     nvvm_options)
     else:
-        tgt = cres.target_context
         code = pyfunc.__code__
         filename = code.co_filename
         linenum = code.co_firstlineno
@@ -311,13 +342,15 @@ def compile_ptx(pyfunc, sig, debug=False, lineinfo=False, device=False,
 
 
 def compile_ptx_for_current_device(pyfunc, sig, debug=False, lineinfo=False,
-                                   device=False, fastmath=False, opt=True):
+                                   device=False, fastmath=False, opt=True,
+                                   abi="numba", abi_info=None):
     """Compile a Python function to PTX for a given set of argument types for
     the current device's compute capabilility. This calls :func:`compile_ptx`
     with an appropriate ``cc`` value for the current device."""
     cc = get_current_device().compute_capability
     return compile_ptx(pyfunc, sig, debug=debug, lineinfo=lineinfo,
-                       device=device, fastmath=fastmath, cc=cc, opt=True)
+                       device=device, fastmath=fastmath, cc=cc, opt=opt,
+                       abi=abi, abi_info=abi_info)
 
 
 def declare_device_function(name, restype, argtypes):
