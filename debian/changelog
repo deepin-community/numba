@@ -1,3 +1,87 @@
+numba (0.59.1+dfsg-2) unstable; urgency=medium
+
+  * Remove || true and allow build time tests to fail again
+  * Ran wrap-and-sort
+  * Build-depend on architecture-is-64-bit.
+
+ -- Diane Trout <diane@ghic.org>  Wed, 03 Jul 2024 10:50:50 -0700
+
+numba (0.59.1+dfsg-1) unstable; urgency=medium
+
+  * New upstream release
+
+ -- Diane Trout <diane@ghic.org>  Tue, 23 Apr 2024 19:36:40 -0700
+
+numba (0.59.0+dfsg-3) unstable; urgency=medium
+
+  * Override lintian binary warnings
+    - shared-library-lacks-prerequisites for _devicearray.so
+      as it's a simple static library
+    - package-contains-documentation-outside-usr-share-doc
+      numba/core/annotations/template.html is pretty print formatting
+  * Attempt testing against Python 3.12
+
+ -- Diane Trout <diane@ghic.org>  Fri, 22 Mar 2024 13:06:44 -0700
+
+numba (0.59.0+dfsg-2) unstable; urgency=medium
+
+  * Update numpy build-depends version to numba's current minimum
+    (Closes: #1067504)
+
+ -- Diane Trout <diane@ghic.org>  Fri, 22 Mar 2024 09:32:42 -0700
+
+numba (0.59.0+dfsg-1) unstable; urgency=medium
+
+  * New upstream release
+  * Update minimum python3-llvmlite version to >= 0.42
+  * Refresh patches
+  * Try testing against python 3.12
+  * Use numba's test random sampling in the autopkgtests.  This should
+    allow the autopkgtests to pass.
+  * Temporarily disable patches that my be resolved
+    llvm_long_name_patch_PR4373, skip-unicode-buserror-armhf, armel-libatomic,
+  * Permanently remove patches that no longer apply
+    - python312-pr9246 (applied upstream)
+    - remove-versioneer (no longer needed)
+  * Add commented out pytest based test runner and test dependencies. It's
+    faster than upstreams runner and looks to be better at time outs, but
+    lacks the ability to do subsets of tests.
+
+ -- Diane Trout <diane@ghic.org>  Thu, 14 Mar 2024 19:44:26 -0700
+
+numba (0.58.1+dfsg-1) unstable; urgency=medium
+
+  * New upstream release
+  * Include upstream WIP 9246 python 3.12 compatibility pull request as
+    python312-pr9246.patch (Closes: #1057461)
+  * Fix running autopackage tests. (Closes: #1043545)
+  * Disable running subprocess tests to avoid a few python 3.11 test
+    failures.
+  * Remove copyrights for removed files
+  * Update path to now .cpp file _hashlib.cpp in d/copyright
+  * Add some descriptions to d/patches
+  * Cleanup patches to use local sphinx indexes.
+    - Removed duplicate patch file ignore-unavaiable-intersphinx.patch
+    - Moved use-local-intersphinx.patch to earlier in the series
+    - linked to python3-doc and llvmlite-doc files
+    - Added llvmlite-doc to build-depends
+  * Update Standards-Version to 4.6.2. No changes needed.
+  * Re-enable building with libtbb
+  * Remove source/lintian-overrides, upstream fixed the long line.
+  * Disable running build tests against python3.12 for now.
+    Remove when 0.59 is relelased
+  * Use pattern for library-not-linked-against-libc override in
+    python3-numba.lintian-overrides
+  * lintian-override _dynfunc.cpython-*.so for not calling C functions as
+    it just calls python functions.
+  * lintian-override dudadrv/_extras, as CUDA is non-free and not available.
+  * Remove embedded versioneer.py (Closes: #869538)
+    - Add remove-versioneer.patch to remove now
+    - Add versioneer.py to d/copyright Files-Excluded to remove in the
+      future
+
+ -- Diane Trout <diane@ghic.org>  Sun, 31 Dec 2023 14:19:49 -0800
+
 numba (0.57.1+dfsg-1) unstable; urgency=medium
 
   * New upstream release

@@ -1,10 +1,14 @@
 Tests: python3-numba
-Depends: python3-numba,
- python3-cffi,
- python3-ipykernel,
- python3-ipython,
- python3-pip,
- python3-pexpect,
- python3-setuptools,
- gdb,
- gcc | c-compiler
+Depends: gcc | c-compiler,
+         gdb,
+         python3-all-dev,
+         python3-cffi,
+         python3-ipykernel,
+         python3-ipython,
+         python3-numba,
+         python3-pexpect,
+         python3-pip,
+         python3-pytest,
+         python3-pytest-timeout,
+         python3-pytest-xdist,
+         python3-setuptools

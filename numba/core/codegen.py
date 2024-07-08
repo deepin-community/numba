@@ -1178,7 +1178,8 @@ class CPUCodegen(Codegen):
         self._tm_features = self._customize_tm_features()
         self._customize_tm_options(tm_options)
         tm = target.create_target_machine(**tm_options)
-        engine = ll.create_mcjit_compiler(llvm_module, tm)
+        use_lmm = config.USE_LLVMLITE_MEMORY_MANAGER
+        engine = ll.create_mcjit_compiler(llvm_module, tm, use_lmm=use_lmm)
 
         if config.ENABLE_PROFILING:
             engine.enable_jit_events()
@@ -1187,10 +1188,30 @@ class CPUCodegen(Codegen):
         self._engine = JitEngine(engine)
         self._target_data = engine.target_data
         self._data_layout = str(self._target_data)
-        self._mpm_cheap = self._module_pass_manager(loop_vectorize=False,
+
+        if config.OPT.is_opt_max:
+            # If the OPT level is set to 'max' then the user is requesting that
+            # compilation time is traded for potential performance gain. This
+            # currently manifests as running the "cheap" pass at -O3
+            # optimisation level with loop-vectorization enabled. There's no
+            # guarantee that this will increase runtime performance, it may
+            # detriment it, this is here to give the user an easily accessible
+            # option to try.
+            loopvect = True
+            opt_level = 3
+        else:
+            # The default behaviour is to do an opt=0 pass to try and inline as
+            # much as possible with the cheapest cost of doing so. This is so
+            # that the ref-op pruner pass that runs after the cheap pass will
+            # have the largest possible scope for working on pruning references.
+            loopvect = False
+            opt_level = 0
+
+        self._mpm_cheap = self._module_pass_manager(loop_vectorize=loopvect,
                                                     slp_vectorize=False,
-                                                    opt=0,
+                                                    opt=opt_level,
                                                     cost="cheap")
+
         self._mpm_full = self._module_pass_manager()
 
         self._engine.set_object_cache(self._library_class._object_compiled_hook,
@@ -1205,6 +1226,7 @@ class CPUCodegen(Codegen):
 
     def _module_pass_manager(self, **kwargs):
         pm = ll.create_module_pass_manager()
+        pm.add_target_library_info(ll.get_process_triple())
         self._tm.add_analysis_passes(pm)
         cost = kwargs.pop("cost", None)
         with self._pass_manager_builder(**kwargs) as pmb:
@@ -1236,6 +1258,7 @@ class CPUCodegen(Codegen):
 
     def _function_pass_manager(self, llvm_module, **kwargs):
         pm = ll.create_function_pass_manager(llvm_module)
+        pm.add_target_library_info(llvm_module.triple)
         self._tm.add_analysis_passes(pm)
         with self._pass_manager_builder(**kwargs) as pmb:
             pmb.populate(pm)

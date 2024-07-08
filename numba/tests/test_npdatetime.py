@@ -411,10 +411,18 @@ class TestTimedeltaArithmetic(TestCase):
         check(TD('Nat', 'ms'), TD('Nat', 's'), True)
         check(TD('Nat'), TD(1), False)
         # Incompatible units => timedeltas compare unequal
-        check(TD(1, 'Y'), TD(365, 'D'), False)
-        check(TD(1, 'Y'), TD(366, 'D'), False)
-        # ... except when both are NaT!
-        check(TD('NaT', 'W'), TD('NaT', 'D'), True)
+        if numpy_version < (1, 25):
+            check(TD(1, 'Y'), TD(365, 'D'), False)
+            check(TD(1, 'Y'), TD(366, 'D'), False)
+            # ... except when both are NaT!
+            check(TD('NaT', 'W'), TD('NaT', 'D'), True)
+        else:
+            # incompatible units raise
+            # The exception is different depending on Python mode
+            with self.assertRaises((TypeError, TypingError)):
+                eq(TD(1, 'Y'), TD(365, 'D'))
+            with self.assertRaises((TypeError, TypingError)):
+                ne(TD(1, 'Y'), TD(365, 'D'))
 
     def test_lt_ge(self):
         lt = self.jit(lt_usecase)
@@ -844,21 +852,21 @@ class TestMetadataScalingFactor(TestCase):
     and timedelta64 dtypes.
     """
 
-    def test_datetime(self, **jitargs):
+    def test_datetime(self, jitargs={'forceobj':True}):
         eq = jit(**jitargs)(eq_usecase)
         self.assertTrue(eq(DT('2014', '10Y'), DT('2010')))
 
     def test_datetime_npm(self):
         with self.assertTypingError():
-            self.test_datetime(nopython=True)
+            self.test_datetime(jitargs={'nopython':True})
 
-    def test_timedelta(self, **jitargs):
+    def test_timedelta(self, jitargs={'forceobj':True}):
         eq = jit(**jitargs)(eq_usecase)
         self.assertTrue(eq(TD(2, '10Y'), TD(20, 'Y')))
 
     def test_timedelta_npm(self):
         with self.assertTypingError():
-            self.test_timedelta(nopython=True)
+            self.test_timedelta(jitargs={'nopython':True})
 
 
 class TestDatetimeDeltaOps(TestCase):
@@ -963,21 +971,7 @@ class TestDatetimeArrayOps(TestCase):
     def test_sub_td_no_match(self):
         self._test_add_sub_td_no_match(np.subtract)
 
-    def _test_min_max(self, operation, parallel, method):
-        if method:
-            if operation is np.min:
-                def impl(arr):
-                    return arr.min()
-            else:
-                def impl(arr):
-                    return arr.max()
-        else:
-            def impl(arr):
-                return operation(arr)
-
-        py_func = impl
-        cfunc = njit(parallel=parallel)(impl)
-
+    def _get_testcases(self):
         test_cases = [
             np.array([
                 DT(0, "ns"),
@@ -1059,7 +1053,24 @@ class TestDatetimeArrayOps(TestCase):
                 TD("NaT", "ns"),
             ]),
         ]
+        return test_cases
 
+    def _test_min_max(self, operation, parallel, method):
+        if method:
+            if operation is np.min:
+                def impl(arr):
+                    return arr.min()
+            else:
+                def impl(arr):
+                    return arr.max()
+        else:
+            def impl(arr):
+                return operation(arr)
+
+        py_func = impl
+        cfunc = njit(parallel=parallel)(impl)
+
+        test_cases = self._get_testcases()
         for arr in test_cases:
             py_res = py_func(arr)
             c_res = cfunc(arr)
@@ -1102,6 +1113,31 @@ class TestDatetimeArrayOps(TestCase):
     @skip_parfors_unsupported
     def test_max_method_parallel(self):
         self._test_min_max(np.max, True, True)
+
+    def test_searchsorted_datetime(self):
+        from .test_np_functions import (
+            searchsorted, searchsorted_left, searchsorted_right,
+        )
+        pyfunc_list = [searchsorted, searchsorted_left, searchsorted_right]
+        cfunc_list = [jit(fn) for fn in pyfunc_list]
+
+        def check(pyfunc, cfunc, a, v):
+            expected = pyfunc(a, v)
+            got = cfunc(a, v)
+            self.assertPreciseEqual(expected, got)
+
+        cases = self._get_testcases()
+        for pyfunc, cfunc in zip(pyfunc_list, cfunc_list):
+            for arr in cases:
+                arr = np.sort(arr)
+                for n in range(1, min(3, arr.size) + 1):
+                    idx = np.random.randint(0, arr.size, n)
+                    vs = arr[idx]
+                    if n == 1:
+                        [v] = vs
+                        check(pyfunc, cfunc, arr, v)
+                    check(pyfunc, cfunc, arr, vs)
+
 
 
 if __name__ == '__main__':

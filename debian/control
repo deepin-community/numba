@@ -3,22 +3,25 @@ Maintainer: Debian Science Maintainers <debian-science-maintainers@lists.alioth.
 Uploaders: Diane Trout <diane@ghic.org>
 Section: science
 Priority: optional
-Build-Depends: debhelper-compat (= 13),
+Build-Depends: architecture-is-64-bit,
+               debhelper-compat (= 13),
                dh-python,
+               dh-sequence-sphinxdoc,
+               libtbb-dev (>= 2021.4.0),
+               llvmlite-doc <!nodoc>,
                python3-all-dev,
                python3-colorama (>= 0.3.9~),
-               python3-llvmlite (>= 0.39~),
-               python3-numpy (<< 1:1.25),
-               python3-pip,
-               sphinx,
-               dh-sequence-sphinxdoc,
-               python3-scipy,
-               python3-sphinx-rtd-theme,
-               python3-setuptools,
-               python3-numpydoc,
                python3-doc <!nodoc>,
-               libtbb-dev (>= 2021.4.0)
-Standards-Version: 4.6.1
+               python3-llvmlite (>= 0.42~),
+               python3-numpy (>= 1:1.22),
+               python3-numpydoc,
+               python3-pip,
+               python3-scipy,
+               python3-setuptools,
+               python3-sphinx-rtd-theme,
+               python3-versioneer,
+               sphinx
+Standards-Version: 4.6.2
 Vcs-Browser: https://salsa.debian.org/science-team/numba
 Vcs-Git: https://salsa.debian.org/science-team/numba.git
 Homepage: https://numba.pydata.org/
@@ -32,8 +35,7 @@ Depends: python3-llvmlite,
          ${misc:Depends},
          ${python3:Depends},
          ${shlibs:Depends}
-Recommends: numba-doc,
-            python3-pip
+Recommends: numba-doc, python3-pip
 Suggests: nvidia-cuda-toolkit [amd64 ppc64el]
 Description: native machine code compiler for Python 3
  Numba compiles native machine code instructions from Python programs at
@@ -50,8 +52,7 @@ Description: native machine code compiler for Python 3
 Package: numba-doc
 Architecture: all
 Section: doc
-Depends: ${sphinxdoc:Depends},
-         ${misc:Depends}
+Depends: ${misc:Depends}, ${sphinxdoc:Depends}
 Recommends: python3-numba
 Description: native machine code compiler for Python (docs)
  Numba compiles native machine code instructions from Python programs at
