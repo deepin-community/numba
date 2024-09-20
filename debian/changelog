@@ -1,3 +1,9 @@
+numba (0.59.1+dfsg-2deepin0) unstable; urgency=medium
+
+  * No source change upload against GCC 12.
+
+ -- Tianyu Chen <sweetyfish@deepin.org>  Fri, 20 Sep 2024 12:14:27 +0800
+
 numba (0.59.1+dfsg-2) unstable; urgency=medium
 
   * Remove || true and allow build time tests to fail again
