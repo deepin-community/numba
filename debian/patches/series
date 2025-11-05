@@ -9,3 +9,5 @@ use-python3-test-nonsense-gdb-binary.patch
 add-test-tags.patch
 add-gdb-test-check.patch
 #armel-libatomic.patch
+llvm-19-pr10011.patch
+numpy-2.3-support.patch

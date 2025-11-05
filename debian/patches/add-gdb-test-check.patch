@@ -106,7 +106,7 @@ Forwarded: No
  class Test(TestCase):
 --- a/numba/tests/support.py
 +++ b/numba/tests/support.py
-@@ -193,6 +193,11 @@
+@@ -231,6 +231,11 @@
  needs_setuptools = unittest.skipUnless(has_setuptools, 'Test needs setuptools')
  
  
@@ -130,7 +130,7 @@ Forwarded: No
  @skip_unless_pexpect
 --- a/numba/tests/test_debuginfo.py
 +++ b/numba/tests/test_debuginfo.py
-@@ -301,6 +301,7 @@
+@@ -302,6 +302,7 @@
          else:
              self.fail('Assertion on DILocalVariable not made')
  
@@ -138,7 +138,7 @@ Forwarded: No
      @TestCase.run_test_in_subprocess(envvars=_NUMBA_OPT_0_ENV)
      def test_DILocation_entry_blk(self):
          # Needs a subprocess as jitting literally anything at any point in the
-@@ -358,6 +359,7 @@
+@@ -359,6 +360,7 @@
          # check the uncondition jump instr itself has no metadata
          self.assertTrue(str(ujmp).endswith(target))
  

@@ -10,7 +10,7 @@ Forwarded: https://github.com/numba/numba/issues/6345#issuecomment-764993001
 
 --- a/numba/tests/support.py
 +++ b/numba/tests/support.py
-@@ -124,7 +124,7 @@
+@@ -148,7 +148,7 @@
  _win_reason = 'Windows-only test'
  windows_only = unittest.skipIf(not sys.platform.startswith('win'), _win_reason)
  

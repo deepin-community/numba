@@ -29,7 +29,7 @@ Forwarded: No
  always_test = tag('always_test')
 --- a/numba/tests/test_caching.py
 +++ b/numba/tests/test_caching.py
-@@ -24,6 +24,7 @@
+@@ -29,6 +29,7 @@
      run_in_new_process_caching,
      skip_if_typeguard,
      skip_parfors_unsupported,
@@ -37,7 +37,7 @@ Forwarded: No
      temp_directory,
  )
  
-@@ -33,6 +34,9 @@
+@@ -38,6 +39,9 @@
      ipykernel = None
  
  
@@ -47,7 +47,7 @@ Forwarded: No
  def check_access_is_preventable():
      # This exists to check whether it is possible to prevent access to
      # a file/directory through the use of `chmod 500`. If a user has
-@@ -290,6 +294,7 @@
+@@ -295,6 +299,7 @@
  
  class TestCache(DispatcherCacheUsecasesTest):
  
@@ -55,7 +55,7 @@ Forwarded: No
      def test_caching(self):
          self.check_pycache(0)
          mod = self.import_module()
-@@ -320,6 +325,7 @@
+@@ -325,6 +330,7 @@
          # Check the code runs ok from another process
          self.run_in_separate_process()
  
@@ -63,7 +63,7 @@ Forwarded: No
      def test_caching_nrt_pruned(self):
          self.check_pycache(0)
          mod = self.import_module()
-@@ -333,6 +339,7 @@
+@@ -338,6 +344,7 @@
          self.check_pycache(3)  # 1 index, 2 data
          self.check_hits(f, 0, 2)
  
@@ -71,7 +71,7 @@ Forwarded: No
      def test_inner_then_outer(self):
          # Caching inner then outer function is ok
          mod = self.import_module()
-@@ -353,6 +360,7 @@
+@@ -358,6 +365,7 @@
          self.assertPreciseEqual(f(3.5, 2), 2.5)
          self.check_pycache(6)  # 2 index, 4 data
  
@@ -79,7 +79,7 @@ Forwarded: No
      def test_outer_then_inner(self):
          # Caching outer then inner function is ok
          mod = self.import_module()
-@@ -367,6 +375,7 @@
+@@ -372,6 +380,7 @@
          self.assertPreciseEqual(f(3.5, 2), 6.5)
          self.check_pycache(5)  # 2 index, 3 data
  
@@ -87,7 +87,7 @@ Forwarded: No
      def test_no_caching(self):
          mod = self.import_module()
  
-@@ -403,6 +412,7 @@
+@@ -408,6 +417,7 @@
          self.assertIn('Cannot cache compiled function "use_big_array" '
                        'as it uses dynamic globals', str(w[0].message))
  
@@ -95,7 +95,7 @@ Forwarded: No
      def test_ctypes(self):
          # Functions using a ctypes pointer can't be cached and raise
          # a warning.
-@@ -421,6 +431,7 @@
+@@ -426,6 +436,7 @@
                  str(w[0].message),
              )
  
@@ -103,7 +103,7 @@ Forwarded: No
      def test_closure(self):
          mod = self.import_module()
  
-@@ -437,6 +448,7 @@
+@@ -442,6 +453,7 @@
              self.assertPreciseEqual(f(3), 12) # 3 + 9 = 12
              self.check_pycache(5) # 1 nbi, 4 nbc
  
@@ -111,7 +111,7 @@ Forwarded: No
      def test_first_class_function(self):
          mod = self.import_module()
          f = mod.first_class_function_usecase
-@@ -448,6 +460,7 @@
+@@ -453,6 +465,7 @@
          # with a different callback.
          self.check_pycache(7)
  
@@ -119,7 +119,7 @@ Forwarded: No
      def test_cache_reuse(self):
          mod = self.import_module()
          mod.add_usecase(2, 3)
-@@ -714,6 +727,7 @@
+@@ -805,6 +818,7 @@
          # Turn off sequential parfor lowering
          parfor.sequential_parfor_lowering = False
  
@@ -127,7 +127,7 @@ Forwarded: No
      def test_caching(self):
          mod = self.import_module()
          self.check_pycache(0)
-@@ -739,6 +753,7 @@
+@@ -830,6 +844,7 @@
          self.assertGreater(match_count, 0,
                             msg='nothing to compare')
  
@@ -135,7 +135,7 @@ Forwarded: No
      def test_user_set_cpu_name(self):
          self.check_pycache(0)
          mod = self.import_module()
-@@ -766,6 +781,7 @@
+@@ -857,6 +872,7 @@
          self.assertEqual(key_generic[1][1], 'generic')
          self.assertEqual(key_generic[1][2], '')
  
@@ -143,7 +143,7 @@ Forwarded: No
      def test_user_set_cpu_features(self):
          self.check_pycache(0)
          mod = self.import_module()
-@@ -1047,6 +1063,7 @@
+@@ -1138,6 +1154,7 @@
      def check_module(self, mod):
          mod.self_test()
  

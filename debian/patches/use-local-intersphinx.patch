@@ -4,7 +4,7 @@ Forwarded: no
 
 --- a/docs/source/conf.py
 +++ b/docs/source/conf.py
-@@ -303,9 +303,9 @@
+@@ -307,9 +307,9 @@
  # Configuration for intersphinx: refer to the Python standard library
  # and the Numpy documentation.
  intersphinx_mapping = {

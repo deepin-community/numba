@@ -541,7 +541,23 @@ class TestTimedeltaArithmetic(TestCase):
     def test_hash(self):
         f = self.jit(hash_usecase)
         def check(a):
-            self.assertPreciseEqual(f(a), hash(a))
+            if numpy_version >= (2, 2):
+                # Generic timedeltas (those without a unit)
+                # are no longer hashable beyond NumPy 2.2
+                # Non-generic timedeltas will have dtype name
+                # as timedelta64[<unit>]
+                if a.dtype.name == 'timedelta64':
+                    return
+
+                # If the function is not being compiled in objmode
+                # then the hash should be equal to the hash of the
+                # integer representation of the timedelta
+                if self.jitargs.get('nopython', False):
+                    self.assertPreciseEqual(f(a), a.astype(int))
+                else:
+                    self.assertPreciseEqual(f(a), hash(a))
+            else:
+                self.assertPreciseEqual(f(a), hash(a))
 
         TD_CASES = ((3,), (-4,), (3, 'ms'), (-4, 'ms'), (27, 'D'),
                     (2, 'D'), (2, 'W'), (2, 'Y'), (3, 'W'),
@@ -557,6 +573,11 @@ class TestTimedeltaArithmetic(TestCase):
         for case, typ in zip(TD_CASES + DT_CASES,
                              (TD,) * len(TD_CASES) + (DT,) * len(TD_CASES)):
             check(typ(*case))
+
+        if numpy_version >= (2, 2):
+            with self.assertRaises(ValueError) as raises:
+                f(TD(3))
+            self.assertIn("Can't hash generic timedelta64", str(raises.exception))
 
     def _test_min_max(self, usecase):
         f = self.jit(usecase)
@@ -1138,6 +1159,42 @@ class TestDatetimeArrayOps(TestCase):
                         check(pyfunc, cfunc, arr, v)
                     check(pyfunc, cfunc, arr, vs)
 
+
+
+class TestDatetimeTypeOps(TestCase):
+    def test_isinstance_datetime(self):
+        @njit
+        def is_complex(a):
+            return isinstance(a, complex)
+        @njit
+        def is_datetime(a):
+            return isinstance(a, np.datetime64)
+        @njit
+        def is_timedelta(a):
+            return isinstance(a, np.timedelta64)
+
+        dt_a = np.datetime64(1, 'ns')
+        dt_b = np.datetime64(2, 'ns')
+        td_c = dt_b - dt_a
+
+        def check(jit_func, x):
+            with self.subTest(f'{jit_func.__name__}({type(x).__name__})'):
+                got = jit_func(x)
+                expect = jit_func.py_func(x)
+                self.assertEqual(got, expect)
+
+        fns = [
+            is_complex,
+            is_datetime,
+            is_timedelta,
+        ]
+        args = [
+            dt_a,
+            dt_b,
+            td_c,
+        ]
+        for fn, arg in itertools.product(fns, args):
+            check(fn, arg)
 
 
 if __name__ == '__main__':
