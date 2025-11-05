@@ -1,8 +1,42 @@
-numba (0.59.1+dfsg-2deepin0) unstable; urgency=medium
+numba (0.61.2+dfsg-2) unstable; urgency=medium
 
-  * No source change upload against GCC 12.
+  * Team upload.
+  * Backport NumPy 2.3 support (Closes: #1114705)
 
- -- Tianyu Chen <sweetyfish@deepin.org>  Fri, 20 Sep 2024 12:14:27 +0800
+ -- Timo Röhling <roehling@debian.org>  Sat, 27 Sep 2025 12:33:17 +0200
+
+numba (0.61.2+dfsg-1) unstable; urgency=medium
+
+  * New upstream release
+  * Remove numpy-2.2-support.patch
+  * Refresh patches
+
+ -- Diane Trout <diane@ghic.org>  Sun, 13 Apr 2025 11:54:29 -0700
+
+numba (0.61.0+dfsg-1) unstable; urgency=medium
+
+  * New upstream release
+  * Refresh patches
+  * Update Build-Depends versions
+    - llvmlite >= 0.44
+    - numpy >= 1:2.2
+  * added numpy-2.2-support.patch from upstream
+    https://github.com/numba/numba/commit/1e2fb1d1c81880a645345991eb48e39b578e119d.patch
+  * Added llvm-19-pr10011.patch
+    https://github.com/numba/numba/pull/10011
+  * Use python3-numba-dev as build-depend for dh_numpy3 command
+  * Be very explicit that we want the numba script to be python3
+    - somehow it was getting a python2 shebang header
+
+ -- Diane Trout <diane@ghic.org>  Sun, 13 Apr 2025 10:04:11 -0700
+
+numba (0.59.1+dfsg-3) unstable; urgency=medium
+
+  * In Autopkgtests always cap the number of cores at 16.  We're having
+    random failures on amd64 which has a high core count on the CI,
+    upstream's comment implies they encountered that on ppc64.
+
+ -- Diane Trout <diane@ghic.org>  Tue, 23 Jul 2024 11:42:33 -0700
 
 numba (0.59.1+dfsg-2) unstable; urgency=medium
 

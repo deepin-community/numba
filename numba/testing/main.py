@@ -243,8 +243,7 @@ class NumbaTestProgram(unittest.main):
         parser.add_argument('-g', '--gitdiff', dest='gitdiff', type=git_diff_str,
                             default=False, nargs='?',
                             help=('Run tests from changes made against '
-                                  'origin/release0.59 '
-                                  'as identified by `git diff`. '
+                                  'origin/release0.61 as identified by `git diff`. '
                                   'If set to "ancestor", the diff compares '
                                   'against the common ancestor.'))
         return parser
@@ -436,9 +435,9 @@ def _choose_gitdiff_tests(tests, *, use_common_ancestor=False):
     path = os.path.join('numba', 'tests')
     if use_common_ancestor:
         print(f"Git diff by common ancestor")
-        target = 'origin/release0.59...HEAD'
+        target = 'origin/release0.61...HEAD'
     else:
-        target = 'origin/release0.59..HEAD'
+        target = 'origin/release0.61..HEAD'
     gdiff_paths = repo.git.diff(target, path, name_only=True).split()
     # normalise the paths as they are unix style from repo.git.diff
     gdiff_paths = [os.path.normpath(x) for x in gdiff_paths]
@@ -746,7 +745,7 @@ def _split_nonparallel_tests(test, sliced):
     return ptests, stests
 
 # A test can't run longer than 10 minutes
-_TIMEOUT = 600
+_TIMEOUT = 1200
 
 class ParallelTestRunner(runner.TextTestRunner):
     """

@@ -1,0 +1,159 @@
+From: =?utf-8?q?Timo_R=C3=B6hling?= <roehling@debian.org>
+Date: Sat, 27 Sep 2025 12:43:33 +0200
+Subject: NumPy 2.3 support
+
+Origin: upstream, https://github.com/numba/numba/pull/10147
+---
+ numba/__init__.py                |  4 ++--
+ numba/np/arrayobj.py             |  2 +-
+ numba/np/new_arraymath.py        | 12 ++++++++++--
+ numba/np/old_arraymath.py        | 12 ++++++++++--
+ numba/tests/test_np_functions.py | 10 ++++++++--
+ numba/tests/test_types.py        |  2 +-
+ setup.py                         |  2 +-
+ 7 files changed, 33 insertions(+), 11 deletions(-)
+
+diff --git a/numba/__init__.py b/numba/__init__.py
+index ab1081d..44fe64a 100644
+--- a/numba/__init__.py
++++ b/numba/__init__.py
+@@ -39,8 +39,8 @@ def _ensure_critical_deps():
+                f"{numpy_version[0]}.{numpy_version[1]}.")
+         raise ImportError(msg)
+ 
+-    if numpy_version > (2, 2):
+-        msg = (f"Numba needs NumPy 2.2 or less. Got NumPy "
++    if numpy_version > (2, 3):
++        msg = (f"Numba needs NumPy 2.3 or less. Got NumPy "
+                f"{numpy_version[0]}.{numpy_version[1]}.")
+         raise ImportError(msg)
+ 
+diff --git a/numba/np/arrayobj.py b/numba/np/arrayobj.py
+index 712668f..a56694b 100644
+--- a/numba/np/arrayobj.py
++++ b/numba/np/arrayobj.py
+@@ -3334,7 +3334,7 @@ def constant_record(context, builder, ty, pyval):
+     Create a record constant as a stack-allocated array of bytes.
+     """
+     lty = ir.ArrayType(ir.IntType(8), pyval.nbytes)
+-    val = lty(bytearray(pyval.tostring()))
++    val = lty(bytearray(pyval.tobytes()))
+     return cgutils.alloca_once_value(builder, val)
+ 
+ 
+diff --git a/numba/np/new_arraymath.py b/numba/np/new_arraymath.py
+index dac5206..caabe9a 100644
+--- a/numba/np/new_arraymath.py
++++ b/numba/np/new_arraymath.py
+@@ -1887,7 +1887,11 @@ def np_partition(a, kth):
+         raise NumbaTypeError(msg)
+ 
+     kthdt = getattr(kth, 'dtype', kth)
+-    if not isinstance(kthdt, (types.Boolean, types.Integer)):
++    if numpy_version >= (2, 3):
++        kth_types = types.Integer
++    else:
++        kth_types = (types.Boolean, types.Integer)
++    if not isinstance(kthdt, kth_types):
+         # bool gets cast to int subsequently
+         raise NumbaTypeError('Partition index must be integer')
+ 
+@@ -1913,7 +1917,11 @@ def np_argpartition(a, kth):
+         raise NumbaTypeError(msg)
+ 
+     kthdt = getattr(kth, 'dtype', kth)
+-    if not isinstance(kthdt, (types.Boolean, types.Integer)):
++    if numpy_version >= (2, 3):
++        kth_types = types.Integer
++    else:
++        kth_types = (types.Boolean, types.Integer)
++    if not isinstance(kthdt, kth_types):
+         # bool gets cast to int subsequently
+         raise NumbaTypeError('Partition index must be integer')
+ 
+diff --git a/numba/np/old_arraymath.py b/numba/np/old_arraymath.py
+index 5f75519..2e458e2 100644
+--- a/numba/np/old_arraymath.py
++++ b/numba/np/old_arraymath.py
+@@ -1887,7 +1887,11 @@ def np_partition(a, kth):
+         raise NumbaTypeError(msg)
+ 
+     kthdt = getattr(kth, 'dtype', kth)
+-    if not isinstance(kthdt, (types.Boolean, types.Integer)):
++    if numpy_version >= (2, 3):
++        kth_types = types.Integer
++    else:
++        kth_types = (types.Boolean, types.Integer)
++    if not isinstance(kthdt, kth_types):
+         # bool gets cast to int subsequently
+         raise NumbaTypeError('Partition index must be integer')
+ 
+@@ -1913,7 +1917,11 @@ def np_argpartition(a, kth):
+         raise NumbaTypeError(msg)
+ 
+     kthdt = getattr(kth, 'dtype', kth)
+-    if not isinstance(kthdt, (types.Boolean, types.Integer)):
++    if numpy_version >= (2, 3):
++        kth_types = types.Integer
++    else:
++        kth_types = (types.Boolean, types.Integer)
++    if not isinstance(kthdt, kth_types):
+         # bool gets cast to int subsequently
+         raise NumbaTypeError('Partition index must be integer')
+ 
+diff --git a/numba/tests/test_np_functions.py b/numba/tests/test_np_functions.py
+index 6f95735..f37d0fa 100644
+--- a/numba/tests/test_np_functions.py
++++ b/numba/tests/test_np_functions.py
+@@ -2934,17 +2934,23 @@ class TestNPFunctions(MemoryLeakMixin, TestCase):
+     def test_partition_boolean_inputs(self):
+         pyfunc = partition
+         cfunc = jit(nopython=True)(pyfunc)
++        kths = (-1, 0, 1)
++        if numpy_version < (2, 3):
++            kths = (True, False) + kths
+ 
+         for d in np.linspace(1, 10, 17), np.array((True, False, True)):
+-            for kth in True, False, -1, 0, 1:
++            for kth in kths:
+                 self.partition_sanity_check(pyfunc, cfunc, d, kth)
+ 
+     def test_argpartition_boolean_inputs(self):
+         pyfunc = argpartition
+         cfunc = jit(nopython=True)(pyfunc)
++        kths = (-1, 0, 1)
++        if numpy_version < (2, 3):
++            kths = (True, False) + kths
+ 
+         for d in np.linspace(1, 10, 17), np.array((True, False, True)):
+-            for kth in True, False, -1, 0, 1:
++            for kth in kths:
+                 self.argpartition_sanity_check(pyfunc, cfunc, d, kth)
+ 
+     @needs_blas
+diff --git a/numba/tests/test_types.py b/numba/tests/test_types.py
+index ce05fab..0bb27f6 100644
+--- a/numba/tests/test_types.py
++++ b/numba/tests/test_types.py
+@@ -567,7 +567,7 @@ class TestRecordDtype(unittest.TestCase):
+         art1 = rec_ty[::1]
+         arr = np.zeros(5, dtype=rec_dt)
+         art2 = typeof(arr)
+-        self.assertEqual(art2.dtype.dtype, rec_ty)
++        self.assertEqual(art2.dtype.dtype, rec_ty.dtype)
+         self.assertEqual(art1, art2)
+ 
+     def test_user_specified(self):
+diff --git a/setup.py b/setup.py
+index d40c84c..3d407c1 100644
+--- a/setup.py
++++ b/setup.py
+@@ -23,7 +23,7 @@ min_python_version = "3.10"
+ max_python_version = "3.14"  # exclusive
+ min_numpy_build_version = "2.0.0rc1"
+ min_numpy_run_version = "1.24"
+-max_numpy_run_version = "2.3"
++max_numpy_run_version = "2.4"
+ min_llvmlite_version = "0.44.0dev0"
+ max_llvmlite_version = "0.45"
+ 
